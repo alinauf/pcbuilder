@@ -46,7 +46,9 @@ export function createProfiles({ $, $$, esc, toast, confetti, sfx, store }) {
     $('#profile').classList.remove('open');
     $('#cert').classList.add('open');
   };
-  $('#cert .print').onclick = () => window.print();
+  // Embedded pages (e.g. a shared link) can't open the print dialog, so suggest a screenshot there instead.
+  if (window.top !== window) $('#cert .print').outerHTML = '<p class="tip">📸 Take a screenshot to save your certificate!</p>';
+  else $('#cert .print').onclick = () => window.print();
   paint();
   return { me, award, track };
 }
