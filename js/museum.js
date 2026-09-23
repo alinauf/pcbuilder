@@ -570,6 +570,41 @@ function iphone() {
   };
 }
 
+
+// ---------- 56k external dial-up modem ----------
+function modem() {
+  const g = new THREE.Group();
+  const shell = std(0x2b2d31, 0.5, 0.2);
+  g.add(rbox(17, 3.2, 12.5, 0.8, shell, 0, 1.6, 0));
+  g.add(box(15, 0.9, 0.2, std(0x15161a, 0.3), 0, 1.9, 6.26));
+  const labels = ['HS', 'AA', 'CD', 'OH', 'RD', 'SD', 'TR', 'MR'];
+  const leds = labels.map((l, i) => {
+    const m = std(0x1a0505, 0.4); m.emissive = new THREE.Color(0xff3322); m.emissiveIntensity = 0;
+    g.add(box(0.6, 0.35, 0.15, m, -6.3 + i * 1.8, 2.05, 6.38));
+    return m;
+  });
+  g.add(decal(15, 1.2, canvasTex(750, 60, (c, w, h) => { c.fillStyle = '#15161a'; c.fillRect(0, 0, w, h); labels.forEach((l, i) => text(c, l, 60 + i * 90, 42, { size: 26, color: '#c9ced6', align: 'center' })); }), [1, 0, 0], [0, 1, 0], 0, 1.0, 6.27, { transparent: false }));
+  g.add(decal(8, 2, canvasTex(400, 100, (c, w, h) => { c.clearRect(0, 0, w, h); text(c, '56K', 20, 70, { size: 64, color: '#e8ecf0', font: 'Arial Black' }); text(c, 'V.90 FAX MODEM', 170, 64, { size: 26, color: '#9aa4b0' }); }), [1, 0, 0], [0, 0, -1], -2, 3.21, -1, { transparent: true }));
+  g.add(cable([[0, 1, -6.3], [2, 0.3, -10], [8, 0.3, -12]], 0.18, std(0xd9d6cc, 0.6), 30));
+  let t0 = 0;
+  return {
+    group: g,
+    play(on) { this.on = on; t0 = performance.now(); },
+    update(dt, t) {
+      const s = (performance.now() - t0) / 1000;
+      leds[0].emissiveIntensity = 2;     // HS: high speed
+      leds[7].emissiveIntensity = 2;     // MR: modem ready
+      leds[3].emissiveIntensity = this.on ? 2 : 0;                  // OH: off hook
+      leds[2].emissiveIntensity = this.on && s > 6.1 ? 2 : 0;       // CD: carrier detect (connected)
+      const data = this.on && s > 8;
+      leds[4].emissiveIntensity = data && Math.random() < 0.5 ? 2 : 0; // RD: receive data
+      leds[5].emissiveIntensity = data && Math.random() < 0.3 ? 2 : 0; // SD: send data
+      leds[6].emissiveIntensity = 2;     // TR: terminal ready
+      leds[1].emissiveIntensity = 0;
+    },
+  };
+}
+
 // ---------- Museum hall ----------
 const BUILDERS = {
   punchcard: [punchCard, 18, { tilt: 0 }],
@@ -587,6 +622,7 @@ const BUILDERS = {
   nes: [nes, 16],
   gameboy: [gameboy, 13],
   iphone: [iphone, 13],
+  modem: [modem, 14, { tilt: 0.35 }],
   nvme: [nvme, 14],
 };
 

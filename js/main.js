@@ -1,5 +1,6 @@
 import { THREE, M, rgbMats, ghostOf, canvasTex, mesh, box } from './kit.js';
 import { createProfiles, createJourney, createFixIt, createPicker } from './features.js';
+import { tone, whoosh, click, keyClick, fans as fanSound, exhibit as exhibitSound, stopExhibit, setMuted } from './audio.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
@@ -140,29 +141,13 @@ async function path(obj, keys, dur = 0.8) {
 }
 const pop = (obj, dur = 0.35) => { obj.visible = true; return tween(dur, k => obj.scale.setScalar(Math.max(0.001, k)), ease.back); };
 
-// ---------- Sound (tiny WebAudio synth) ----------
-let ac, muted = store.get('muted') === '1';
-function tone(f, d = 0.12, type = 'sine', vol = 0.12, when = 0, slide) {
-  if (muted) return;
-  ac ||= new AudioContext();
-  const t = ac.currentTime + when, o = ac.createOscillator(), g = ac.createGain();
-  o.type = type; o.frequency.setValueAtTime(f, t);
-  if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + d);
-  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
-  o.connect(g).connect(ac.destination); o.start(t); o.stop(t + d + 0.02);
-}
-function whoosh(d = 2.5) {
-  if (muted) return;
-  ac ||= new AudioContext();
-  const len = ac.sampleRate * d, buf = ac.createBuffer(1, len, ac.sampleRate), data = buf.getChannelData(0);
-  for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * Math.min(1, i / (len * 0.5)) * (1 - i / len) * 0.5;
-  const src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
-  f.type = 'lowpass'; f.frequency.value = 700; g.gain.value = 0.25;
-  src.buffer = buf; src.connect(f).connect(g).connect(ac.destination); src.start();
-}
+// ---------- Sound (synthesised in audio.js) ----------
+let muted = store.get('muted') === '1';
+setMuted(muted);
 const sfx = {
   click: () => tone(880, 0.05, 'square', 0.04),
-  snap: () => { tone(1400, 0.03, 'square', 0.06); tone(700, 0.05, 'square', 0.05, 0.03); },
+  snap: () => { click(2600, 0.012, 0.4); click(700, 0.04, 0.25, 0.012); },
+  key: keyClick,
   ok: () => [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.18, 'triangle', 0.1, i * 0.08)),
   no: () => tone(220, 0.25, 'sawtooth', 0.05, 0, 140),
   pop: () => tone(500, 0.12, 'sine', 0.1, 0, 900),
@@ -312,6 +297,8 @@ info.querySelector('.speak').onclick = () => { const d = PARTS[infoId]; if (d) s
 let mode = null;
 const views = {
   overview: () => fly(V(0, 20, 0), fit(V(0, 20, 0), V(62, 48, 92))),
+  // Aim a little higher so the PC sits below the question card
+  find: () => fly(V(2, 30, 0), fit(V(2, 30, 0), V(55, 44, 98))),
   build: () => fly(V(-28, 8, 6), fit(V(-28, 8, 6), V(-8, 70, 120))),
 };
 function setMode(m) {
@@ -320,6 +307,7 @@ function setMode(m) {
   store.set('mode', m);
   tweens.clear();
   speechSynthesis?.cancel?.();
+  stopExhibit();
   hideInfo();
   $$('.modes button').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
   document.body.dataset.mode = m;
@@ -541,7 +529,7 @@ async function place() {
         { pos: BOARD_ORIGIN.clone(), dur: 0.4 },
       ]);
       moboBox.visible = false;
-      for (const sc of pc.mobo.refs.screws) { sc.scale.setScalar(0.001); sc.visible = true; tone(1200, 0.04, 'square', 0.04); await pop(sc, 0.15); }
+      for (const sc of pc.mobo.refs.screws) { sc.scale.setScalar(0.001); sc.visible = true; tone(180, 0.14, 'sawtooth', 0.05, 0, 320); await pop(sc, 0.15); }
       break;
     }
     case 'cables':
@@ -633,7 +621,7 @@ function enterFind() {
   showLabels(false);
   find.list = [...FIND].sort(() => Math.random() - 0.5);
   Object.assign(find, { i: 0, score: 0, tries: 0, lock: false });
-  views.overview();
+  views.find();
   askFind();
 }
 function askFind() {
@@ -660,8 +648,8 @@ function answerFind(id) {
         $('#findQ').textContent = `You found them all! ${'⭐'.repeat(stars) || '👍'}`;
         $('#findFb').innerHTML = `Score: ${find.score} / ${find.list.length}. <button class="link" id="findAgain">Play again ↺</button>`;
         $('#findAgain').onclick = () => { mode = null; setMode('find'); };
-        views.overview();
-      } else { askFind(); views.overview(); }
+        views.find();
+      } else { askFind(); views.find(); }
     }, 2600);
   } else {
     find.tries++; sfx.no();
@@ -682,6 +670,7 @@ function focusExhibit(i, instant) {
   const it = museum.items[exIndex], ex = EXHIBITS[it.id];
   profiles.track('museum', it.id, EXHIBIT_ORDER.length, 'museum');
   museum.items.forEach(m => { if (m !== it && m.playing) { m.playing = false; m.ex.play(false); } });
+  stopExhibit();
   // On wide screens the info card covers the right side, so aim a little right of the exhibit to shift it left.
   const t = it.focus.clone().add(V(innerWidth > 900 ? it.size * 0.45 : 0, innerWidth > 900 ? 0 : -it.size * 0.25, 0));
   const cam = t.clone().add(V(4, 6, (24 + it.size * 1.25) * Math.max(1, 0.9 / camera.aspect)));
@@ -704,7 +693,7 @@ function togglePlay() {
   it.playing = !it.playing; it.ex.play(it.playing);
   $('#exhibit .play').classList.toggle('on', it.playing);
   it.playing ? sfx.pop() : sfx.click();
-  if (it.playing && it.id === 'hdd') whoosh(1.5);
+  exhibitSound(it.id, it.playing);
 }
 $('#exhibit .play').onclick = togglePlay;
 // On phones the card starts folded so the exhibit stays visible; tap its header to unfold.
@@ -925,7 +914,7 @@ function pickCardText() { const s = STEPS[build.step]; $('#task').textContent = 
 $$('.level button').forEach(b => (b.onclick = () => { sfx.click(); setLevel(b.dataset.level); }));
 const muteBtn = $('#mute');
 const paintMute = () => { muteBtn.textContent = muted ? '🔇' : '🔊'; muteBtn.setAttribute('aria-label', muted ? 'Sound off' : 'Sound on'); };
-muteBtn.onclick = () => { muted = !muted; store.set('muted', muted ? '1' : '0'); paintMute(); };
+muteBtn.onclick = () => { muted = !muted; setMuted(muted); store.set('muted', muted ? '1' : '0'); paintMute(); if (muted) fanSound(0); };
 paintMute();
 
 // ---------- Thumbnails for the build tray (rendered from the real 3D parts) ----------
@@ -969,10 +958,12 @@ const clock = new THREE.Clock();
 function tick(dt = Math.min(clock.getDelta(), 0.05)) {
   const t = clock.elapsedTime;
   runTweens(dt);
+  if (mode === 'museum' || mode === 'chips') fanSound(0);
   if (mode === 'museum') museum.update(dt, t, exIndex);
   else if (mode === 'chips') chipLab.update(dt, t);
   else {
     updatePower(dt, t);
+    fanSound(power.level);
     if (build.hover && !build.busy) build.hover.position.copy(build.hoverBase).addScaledVector(build.hoverAxis, Math.sin(t * 2.5) * 0.5);
     if (build.ghost) build.ghost.ghostMat.opacity = 0.18 + 0.14 * Math.sin(t * 4);
     journey.update();

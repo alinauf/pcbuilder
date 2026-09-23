@@ -110,7 +110,7 @@ export function createJourney(ctx) {
       if (i === 0) {
         const a = pc.keyboard.refs.keyA;
         await tween(0.25, k => (a.position.y = 2.2 - 0.5 * Math.sin(k * Math.PI)));
-        sfx.snap();
+        sfx.key();
       }
       if (my !== run) return;
       const text = panel(i);

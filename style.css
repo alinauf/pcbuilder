@@ -112,8 +112,12 @@ body[data-level="kid"] .how { font-size: 18px; }
 body[data-mode="build"] .card { top: 128px; }
 
 /* Find */
-.bubble.find { left: 50%; transform: translateX(-50%); top: 82px; width: min(560px, calc(100vw - 32px)); text-align: center; }
-.bubble.find .task { font-size: 26px; }
+.bubble.find { left: 50%; transform: translateX(-50%); top: 76px; width: min(620px, calc(100vw - 32px)); text-align: center; padding: 10px 18px 12px; pointer-events: none; }
+.bubble.find button { pointer-events: auto; }
+.bubble.find .task { font-size: 20px; margin: 0 0 2px; }
+.bubble.find .how { font-size: 15px; }
+.bubble.find .stars { margin-top: 6px; gap: 4px; }
+.bubble.find .stars span { width: 18px; height: 18px; font-size: 11px; }
 .stars { display: flex; gap: 6px; justify-content: center; margin-top: 12px; }
 .stars span.now { background: var(--accent); }
 
@@ -325,7 +329,8 @@ body.journeying #exploreUI .toolbar, body.journeying #exploreUI .hint { opacity:
   body[data-mode="build"] .stepno { display: none; }
   body[data-mode="build"] .how { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   .journey { top: 128px; }
-  .bubble.find { top: 116px; }
+  .bubble.find { top: 112px; }
+  .bubble.find .task { font-size: 17px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }

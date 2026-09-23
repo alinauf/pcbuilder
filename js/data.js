@@ -263,6 +263,13 @@ export const EXHIBITS = {
     adult: 'Apple announced the iPhone on 9 January 2007 and released it that June. It had a 3.5-inch multi-touch screen (320 × 480), 128 MB of RAM, 4 or 8 GB of storage and an ARM processor at roughly 400 MHz. Multi-touch plus a full web browser changed how people used phones.',
     fact: 'Modern phones are thousands of times faster than the first iPhone, and far more powerful than the IBM PC in this museum.',
   },
+  modem: {
+    name: 'Dial-up Modem', year: '1990s', emoji: '📞', play: 'Connect to the internet',
+    stats: [['Top speed', '56 kbit/s'], ['Used', 'the phone line']],
+    kid: 'Before Wi-Fi, computers went on the internet through the telephone line! The modem turned data into screechy sounds and sent them down the phone wire. Press play to hear it connect. And nobody could use the phone while you were online!',
+    adult: 'A modem (modulator-demodulator) converts digital data into audio tones for analog phone lines, and back again. The famous handshake: dial tone, touch-tone dialling, the answer tone (2100 Hz), then negotiation, where both modems probe the line to pick the fastest settings it can handle. V.90 (1998) reached 56 kbit/s downstream. That was the practical limit of a phone line, and real connections were often slower.',
+    fact: 'Downloading one 4 MB song took about 10 minutes at 56k. Today’s broadband does it in well under a second.',
+  },
   usb: {
     name: 'USB Flash Drive', year: '2000', emoji: '🔑', play: 'Plug it in',
     stats: [['First (2000)', '8 MB'], ['Today', 'up to 2 TB']],
@@ -278,7 +285,7 @@ export const EXHIBITS = {
     fact: 'The 1956 hard drive weighed about a tonne and held 3.75 MB. A 2 TB one weighs about 7 grams and holds over 500,000 times more.',
   },
 };
-export const EXHIBIT_ORDER = ['punchcard', 'tube', 'eniac', 'transistor', 'hdd', 'i4004', 'floppy8', 'floppy525', 'ibmpc', 'floppy35', 'cd', 'nes', 'gameboy', 'usb', 'iphone', 'nvme'];
+export const EXHIBIT_ORDER = ['punchcard', 'tube', 'eniac', 'transistor', 'hdd', 'i4004', 'floppy8', 'floppy525', 'ibmpc', 'floppy35', 'cd', 'nes', 'gameboy', 'modem', 'usb', 'iphone', 'nvme'];
 
 // "How many floppies?" calculator (1.44 MB disk = 1,474,560 bytes, 3.3 mm thick)
 export const FLOPPY_ITEMS = [
