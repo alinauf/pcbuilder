@@ -213,7 +213,9 @@ body[data-mode="build"] .card { top: 128px; }
   .modes button { padding: 8px 10px; }
   .level button { font-size: 0; } .level button::first-letter { font-size: 18px; }
   .progress { top: 116px; gap: 3px; } .progress span { width: 22px; height: 22px; font-size: 11px; }
-  .bubble { top: 156px; padding: 14px; } .task { font-size: 19px; }
+  .bubble { top: 156px; padding: 12px 14px; } .task { font-size: 18px; margin: 2px 0 4px; }
+  .how, body[data-level="kid"] .how { font-size: 15px; }
+  .bubble .primary { margin-top: 10px; padding: 10px; }
   .bubble.find { top: 116px; }
 }
 @media (prefers-reduced-motion: reduce) {
