@@ -146,8 +146,8 @@ export function buildMotherboard() {
   const cap = rbox(3.9, 3.9, 0.3, 0.08, new THREE.MeshStandardMaterial({ color: 0x0c0c0d, roughness: 0.25 }), 0, -2.8, 0.2);
   plate.add(cap);
   const lever = new THREE.Group(); lever.position.set(3.35, -3.0, 0.3); sock.add(lever);
-  lever.add(cyl(0.09, 6.2, M.steel, 0, 3.1, 0, 'y', 10));
-  lever.add(cyl(0.09, 0.9, M.steel, -0.45, 6.2, 0, 'x', 10));
+  lever.add(cyl(0.13, 6.2, M.alu, 0, 3.1, 0, 'y', 12));
+  lever.add(cyl(0.13, 0.9, M.alu, -0.45, 6.2, 0, 'x', 12));
   lever.add(cyl(0.18, 0.9, M.black, 0, 5.9, 0, 'y', 10));
   sock.add(box(0.5, 0.6, 0.35, M.steel, 3.35, 2.6, 0.2));
   const refs = g.refs = { socket: { plate, lever, cap, capHome: cap.position.clone() } };
@@ -433,6 +433,9 @@ export function buildGPU() {
     if (i === 3) g.add(box(0.06, 0.12, w * 0.6, M.black, -0.14, -0.55, z));
   });
   // PCIe power connectors on the top edge
+  const errLed = new THREE.MeshStandardMaterial({ color: 0x220505, emissive: 0xff2020, emissiveIntensity: 0 });
+  g.add(box(0.3, 0.15, 0.2, errLed, 25.2, 0.2, 12.2));
+  g.refs.errLed = errLed;
   g.refs.powerPlugs = [21.5, 23.6].map(x => {
     g.add(faceBox(1.75, 0.95, 1.0, M.black, 4, holesTex(4, 2), x, 0.4, 12.1));
     return new THREE.Vector3(x, 0.4, 12.6);
@@ -468,7 +471,9 @@ export function buildPSU() {
   g.add(decal(9.4, 8.2, null, [0, 0, 1], [0, 1, 0], -W / 2 - 0.01, 0, -2.5, { color: 0x3a3c40, alphaTest: 0.5, metalness: 0.5, alphaMap: meshAlpha(40) }));
   g.add(box(0.3, 2.6, 3.0, M.black, -W / 2 - 0.1, 1.2, 4.5));
   g.add(merged([cylGeo(0.12, 0.6, -W / 2 - 0.2, 1.7, 4.5, 'x'), cylGeo(0.12, 0.6, -W / 2 - 0.2, 0.7, 3.8, 'x'), cylGeo(0.12, 0.6, -W / 2 - 0.2, 0.7, 5.2, 'x')], M.steel));
-  g.add(box(0.4, 1.8, 1.0, M.red, -W / 2 - 0.15, -2.2, 4.8));
+  const rocker = box(0.4, 1.8, 1.0, M.red, -W / 2 - 0.15, -2.2, 4.8);
+  g.add(rocker);
+  g.refs.rocker = rocker;
   // Front: modular sockets
   g.add(decal(14.8, 8.4, cached('psuFront', () => canvasTex(740, 420, (c, w, h) => {
     c.fillStyle = '#17181b'; c.fillRect(0, 0, w, h);
@@ -657,10 +662,101 @@ export function buildSyringe() {
 }
 
 // ---------- Assemble everything + install data ----------
+
+// ---------- Monitor + keyboard (peripherals) ----------
+const SCREEN_W = 1280, SCREEN_H = 720;
+function drawScreen(c, state, typed = '') {
+  const W = SCREEN_W, H = SCREEN_H;
+  c.fillStyle = '#000'; c.fillRect(0, 0, W, H);
+  if (state === 'off') return;
+  if (state === 'nosignal') {
+    c.fillStyle = '#10141c'; c.fillRect(W / 2 - 250, H / 2 - 70, 500, 140);
+    c.strokeStyle = '#4b5566'; c.lineWidth = 3; c.strokeRect(W / 2 - 250, H / 2 - 70, 500, 140);
+    text(c, 'No Signal', W / 2, H / 2 - 5, { size: 52, color: '#e6ebf2', align: 'center' });
+    text(c, 'Check the cable (DisplayPort)', W / 2, H / 2 + 45, { size: 26, color: '#8b95a5', align: 'center', weight: 'normal' });
+    return;
+  }
+  if (state === 'bios') {
+    c.font = '28px "Courier New", monospace'; c.fillStyle = '#cfd6e0';
+    ['PC LAB BIOS v2.6', '', 'CPU  : 8-Core Processor @ 4.80 GHz', 'RAM  : 32768 MB DDR5', 'NVMe : 2 TB', '', 'Booting...'].forEach((l, i) => c.fillText(l, 60, 80 + i * 40));
+    return;
+  }
+  // desktop: wallpaper + a notepad window
+  const g = c.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#2b5cd6'); g.addColorStop(0.55, '#7b4fd6'); g.addColorStop(1, '#ff8a5c');
+  c.fillStyle = g; c.fillRect(0, 0, W, H);
+  c.fillStyle = 'rgba(255,255,255,0.12)'; for (let i = 0; i < 6; i++) { c.beginPath(); c.arc(1000 - i * 60, 160 + i * 30, 240 - i * 30, 0, 7); c.fill(); }
+  c.fillStyle = 'rgba(12,16,24,0.75)'; c.fillRect(0, H - 56, W, 56);
+  ['#ffc940', '#4fe3ff', '#4ade80', '#ff6b6b'].forEach((col, i) => { c.fillStyle = col; c.fillRect(W / 2 - 110 + i * 60, H - 44, 36, 32); });
+  c.fillStyle = '#f7f8fb'; c.fillRect(250, 110, 780, 440);
+  c.fillStyle = '#dfe4ec'; c.fillRect(250, 110, 780, 46);
+  text(c, '📝  My story.txt', 270, 142, { size: 24, color: '#333' });
+  text(c, 'Once upon a time, a kid built a computer.', 290, 220, { size: 30, color: '#222', weight: 'normal' });
+  text(c, 'Then they pressed a key:  ' + typed, 290, 280, { size: 30, color: '#222', weight: 'normal' });
+  if (typed) text(c, typed, 520, 470, { size: 160, color: '#2b5cd6', align: 'center' });
+  if (state === 'hot') {
+    c.fillStyle = 'rgba(160,20,20,0.92)'; c.fillRect(W / 2 - 330, H / 2 - 90, 660, 180);
+    text(c, '🌡️ CPU temperature 100 °C', W / 2, H / 2 - 15, { size: 44, color: '#fff', align: 'center' });
+    text(c, 'Shutting down to protect the processor…', W / 2, H / 2 + 45, { size: 28, color: '#ffd6d6', align: 'center', weight: 'normal' });
+  }
+}
+export function buildMonitor() {
+  const g = new THREE.Group(); g.name = 'monitor';
+  const dark = new THREE.MeshStandardMaterial({ color: 0x1b1d22, roughness: 0.45, metalness: 0.5 });
+  g.add(rbox(24, 1.2, 18, 0.5, dark, 0, 0.6, 0));
+  g.add(box(6, 24, 2.4, dark, 0, 13, -4.5));
+  g.add(rbox(61.4, 36.4, 2.2, 0.6, M.black, 0, 31, -2.2));
+  g.add(rbox(40, 24, 3.4, 1.2, dark, 0, 30, -4.2));
+  const scr = canvasTex(SCREEN_W, SCREEN_H, c => drawScreen(c, 'off'));
+  const screen = mesh(new THREE.PlaneGeometry(59.8, 33.6), new THREE.MeshStandardMaterial({ color: 0x050608, roughness: 0.2, emissive: 0xffffff, emissiveMap: scr, emissiveIntensity: 0.9 }), 0, 31.3, -1.08);
+  g.add(screen);
+  const led = new THREE.MeshStandardMaterial({ color: 0x111111, emissive: 0x4fe3ff, emissiveIntensity: 0 });
+  g.add(box(0.5, 0.2, 0.1, led, 27, 13.2, -1.05));
+  let last = '';
+  g.refs = {
+    screen,
+    port: new THREE.Vector3(0, 24, -6),
+    set(state, typed = '') {
+      const k = state + '|' + typed; if (k === last) return; last = k;
+      drawScreen(scr.userData.canvas.getContext('2d'), state, typed); scr.needsUpdate = true;
+      led.emissiveIntensity = state === 'off' ? 0 : 2;
+    },
+  };
+  return shadow(g);
+}
+export function buildKeyboard() {
+  const g = new THREE.Group(); g.name = 'keyboard';
+  g.add(rbox(44, 1.8, 14.5, 0.6, new THREE.MeshStandardMaterial({ color: 0x1b1d22, roughness: 0.5, metalness: 0.4 }), 0, 0.9, 0));
+  const u = 1.9, keys = [], x0 = -20.8, z0 = -5.6;
+  const key = (x, z, w = 1) => keys.push(boxGeo(u * w - 0.3, 0.8, u - 0.3, x + (u * w) / 2, 2.2, z));
+  let keyA;
+  const rows = [[1, 13, 2], [1.5, 12, 1.5], [1.75, 11, 2.25], [2.25, 10, 2.75]];
+  for (let c = 0; c < 13; c++) key(x0 + c * u * (c ? 1.12 : 1), z0);
+  rows.forEach(([first, n, last], r) => {
+    const z = z0 + (r + 1) * u + 0.3;
+    let x = x0; key(x, z, first); x += first * u;
+    for (let i = 0; i < n; i++) { if (r === 2 && i === 0) keyA = new THREE.Vector3(x + u / 2, 2.2, z); else key(x, z); x += u; }
+    key(x, z, last);
+  });
+  const zb = z0 + 5 * u + 0.3;
+  key(x0, zb, 1.5); key(x0 + 1.5 * u, zb, 1.25); key(x0 + 2.75 * u, zb, 1.5); key(x0 + 4.25 * u, zb, 6.25); key(x0 + 10.5 * u, zb, 1.5); key(x0 + 12 * u, zb, 1.5); key(x0 + 13.5 * u, zb, 1.5);
+  for (let r = 0; r < 5; r++) for (let c = 0; c < 4; c++) key(9.4 + c * u, z0 + (r + 1) * u + 0.3);
+  const capMat = new THREE.MeshStandardMaterial({ color: 0x2a2d33, roughness: 0.6 });
+  g.add(merged(keys, capMat));
+  const a = new THREE.Group(); a.position.copy(keyA); g.add(a);
+  a.add(box(u - 0.3, 0.8, u - 0.3, new THREE.MeshStandardMaterial({ color: 0xffc940, roughness: 0.5 }), 0, 0, 0));
+  a.add(decal(1.2, 1.2, canvasTex(128, 128, c => { c.clearRect(0, 0, 128, 128); text(c, 'A', 64, 70, { size: 90, color: '#231a00', align: 'center', base: 'middle' }); }), [1, 0, 0], [0, 0, -1], 0, 0.41, 0, { transparent: true }));
+  g.refs = { keyA: a, back: new THREE.Vector3(0, 1.2, -7.4) };
+  return shadow(g);
+}
+
 export function buildPC() {
   const root = new THREE.Group();
   const { pcCase, panel, fans } = buildCase();
   root.add(pcCase, panel);
+  const monitor = buildMonitor(); monitor.position.set(60, 0, -14); monitor.rotation.y = -0.45;
+  const keyboard = buildKeyboard(); keyboard.position.set(50, 0, 28); keyboard.rotation.y = -0.3;
+  root.add(monitor, keyboard);
+  root.updateMatrixWorld(true);
   panel.position.set(0, 23.35, 10.72);
   const mobo = buildMotherboard();
   root.add(mobo);
@@ -671,6 +767,8 @@ export function buildPC() {
 
   const P = {
     case: { obj: pcCase, fixed: true },
+    monitor: { obj: monitor, fixed: true },
+    keyboard: { obj: keyboard, fixed: true },
     fans: { obj: fans, fixed: true },
     motherboard: { obj: mobo, parent: root, pos: BOARD_ORIGIN.clone(), quat: Q.clone(), explode: [0, 0, 5] },
     cpu: { obj: cpu, parent: mobo, pos: bp(...SOCKET, Z + 0.3), quat: Q.clone(), approach: [0, 0, 5], explode: [0, 0, 6] },
@@ -701,6 +799,21 @@ export function buildPC() {
   // Where the board sits during the first build steps: flat on its box, like real builders do.
   P.motherboard.flat = { pos: new THREE.Vector3(-67.2, 7.15, -3.25), quat: qa(-Math.PI / 2, 0, 0) };
   const allFans = [...fans.refs.fans, ...cooler.refs.fans, ...gpu.refs.fans, ...psu.refs.fans];
+  // Peripheral cables (routed behind the case to the rear ports)
+  const black = new THREE.MeshStandardMaterial({ color: 0x15161a, roughness: 0.6 });
+  const kb = keyboard.localToWorld(keyboard.refs.back.clone()), mp = monitor.localToWorld(monitor.refs.port.clone());
+  const USB = new THREE.Vector3(-22.4, 41.2, -6.6), DP = new THREE.Vector3(-22.4, 25.95, -4.64), HDMI = new THREE.Vector3(-22.4, 38.2, -6.3);
+  const P3 = v => [v.x, v.y, v.z];
+  const kbPath = [P3(kb), [kb.x - 4, 0.5, kb.z - 5], [28, 0.5, 13], [26, 0.5, -14], [-10, 0.5, -15], [-25, 0.6, -13], [-25.5, 30, -8.5], [-23.8, USB.y, USB.z], P3(USB)];
+  const monBase = [P3(mp), [mp.x - 3, 1, mp.z - 4], [30, 0.6, -16], [-10, 0.6, -16.5], [-25.5, 0.6, -13.5], [-26, 12, -9]];
+  const kbCable = cable(kbPath, 0.28, black, 160);
+  const dpCable = cable([...monBase, [-25.5, 22, -6], [-23.8, DP.y, DP.z], P3(DP)], 0.32, black, 160);
+  const hdmiCable = cable([...monBase, [-25.5, 32, -7], [-23.8, HDMI.y, HDMI.z], P3(HDMI)], 0.32, black, 160);
+  hdmiCable.visible = false;
+  root.add(kbCable);
+  const dispGroup = new THREE.Group(); dispGroup.add(dpCable, hdmiCable); monitor.attach(dispGroup);
+  kbCable.userData.partId = 'keyboard';
+  const periph = { kbCable, dpCable, hdmiCable, paths: { kb: kbPath, dp: [...monBase, [-25.5, 22, -6], [-23.8, DP.y, DP.z], P3(DP)] }, USB, DP };
   root.traverse(o => { if (o.userData.explode) o.userData.home = o.position.clone(); });
-  return { root, P, mobo, pcCase, panel, fans: allFans };
+  return { root, P, mobo, pcCase, panel, monitor, keyboard, periph, psu, gpu, cooler, fans: allFans };
 }

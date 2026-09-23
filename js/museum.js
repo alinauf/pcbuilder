@@ -422,6 +422,144 @@ function nvme() {
   return { group: g, play(on) { this.on = on; }, update(dt) { flip += ((this.on ? Math.PI : 0) - flip) * Math.min(1, dt * 4); s.rotation.y = flip; s.position.x = -4 * Math.cos(flip); s.position.z = 4 * Math.sin(flip); } };
 }
 
+
+// ---------- ENIAC (a section of three panels) ----------
+function eniac() {
+  const g = new THREE.Group();
+  const cab = std(0x23262b, 0.6, 0.4);
+  const lamps = [];
+  for (let p = 0; p < 3; p++) {
+    const x = (p - 1) * 62;
+    g.add(box(60, 240, 60, cab, x, 120, 0));
+    g.add(decal(54, 220, canvasTex(270, 1100, (c, w, h) => {
+      c.fillStyle = '#2d3036'; c.fillRect(0, 0, w, h);
+      c.strokeStyle = '#555b63'; c.lineWidth = 4; c.strokeRect(10, 10, w - 20, h - 20);
+      for (let r = 0; r < 10; r++) for (let k = 0; k < 6; k++) { c.fillStyle = '#111'; c.beginPath(); c.arc(40 + k * 38, 80 + r * 30, 11, 0, 7); c.fill(); c.fillStyle = '#9aa0a8'; c.fillRect(38 + k * 38, 72 + r * 30, 4, 10); }
+      for (let r = 0; r < 12; r++) for (let k = 0; k < 10; k++) { c.fillStyle = '#0b0b0c'; c.beginPath(); c.arc(30 + k * 23, 450 + r * 26, 6, 0, 7); c.fill(); }
+      c.fillStyle = '#c9ced4'; c.font = 'bold 26px Courier New'; c.fillText(['ACCUMULATOR', 'MULTIPLIER', 'FUNCTION TBL'][p], 26, 800);
+    }), [1, 0, 0], [0, 1, 0], x, 125, 30.1, { transparent: false }));
+    for (let r = 0; r < 5; r++) for (let k = 0; k < 10; k++) {
+      const m = new THREE.MeshStandardMaterial({ color: 0x331a0a, emissive: 0xff7a2a, emissiveIntensity: 0 });
+      lamps.push(m);
+      g.add(cyl(1.4, 1.2, m, x - 21 + k * 4.7, 205 - r * 5.5, 30.6, 'z', 10));
+    }
+  }
+  for (let i = 0; i < 6; i++) g.add(cable([[-70 + i * 22, 70, 31], [-60 + i * 22, 30, 38], [-40 + i * 22, 60, 31]], 1.2, std(0x151515, 0.6), 30));
+  let acc = 0;
+  return {
+    group: g,
+    play(on) { this.on = on; },
+    update(dt, t) {
+      acc += dt;
+      if (acc < 0.08) return; acc = 0;
+      lamps.forEach(m => (m.emissiveIntensity = this.on ? (Math.random() < 0.4 ? 3 : 0) : (Math.random() < 0.02 ? 1.5 : m.emissiveIntensity * 0.8)));
+    },
+  };
+}
+
+// ---------- NES console + controller + cartridge ----------
+function nes() {
+  const g = new THREE.Group();
+  const light = std(0xc9c6bd, 0.6), dark = std(0x55565a, 0.6);
+  g.add(box(25.4, 4.4, 20.3, light, 0, 2.2, 0));
+  g.add(box(25.4, 4.5, 20.3, dark, 0, 6.65, 0));
+  g.add(box(14.5, 3.4, 0.3, std(0x3c3d40, 0.6), -3, 5.6, 10.2));
+  const led = std(0x330505, 0.4); led.emissive = new THREE.Color(0xff1a1a); led.emissiveIntensity = 0;
+  g.add(box(0.6, 0.35, 0.2, led, 9.6, 3.3, 10.2));
+  g.add(box(1.6, 0.8, 0.4, std(0x222222, 0.5), 7.3, 3.2, 10.2), box(1.6, 0.8, 0.4, std(0x222222, 0.5), 9.6, 1.6, 10.2));
+  const cart = new THREE.Group(); g.add(cart);
+  cart.add(box(12, 13.3, 1.8, std(0x8f8d86, 0.6), 0, 0, 0));
+  cart.add(decal(9, 7, canvasTex(360, 280, (c, w, h) => { c.fillStyle = '#1b2a6b'; c.fillRect(0, 0, w, h); text(c, 'SUPER', w / 2, 110, { size: 64, color: '#ffc940', align: 'center', font: 'Arial Black' }); text(c, 'BLOCK BROS', w / 2, 190, { size: 44, color: '#fff', align: 'center', font: 'Arial Black' }); }), [1, 0, 0], [0, 1, 0], 0, 2.5, 0.91, { transparent: false }));
+  const pad = new THREE.Group(); pad.position.set(-4, 0.6, 20); g.add(pad);
+  pad.add(box(12, 1.2, 5.3, std(0xc9c6bd, 0.6), 0, 0, 0));
+  pad.add(box(10.8, 0.1, 4.2, std(0x1c1c1e, 0.5), 0, 0.62, 0));
+  pad.add(box(2.4, 0.4, 0.8, M.black, -3.3, 0.8, 0.4), box(0.8, 0.4, 2.4, M.black, -3.3, 0.8, 0.4));
+  pad.add(cyl(0.55, 0.4, M.red, 3.2, 0.8, 0.8, 'y'), cyl(0.55, 0.4, M.red, 4.6, 0.8, 0.8, 'y'));
+  pad.add(box(1.2, 0.2, 0.4, std(0x44454a, 0.5), -0.6, 0.72, 1.0), box(1.2, 0.2, 0.4, std(0x44454a, 0.5), 1.0, 0.72, 1.0));
+  g.add(cable([[-4, 0.6, 17.3], [-6, 0.6, 14], [7.3, 3.2, 10.4]], 0.2, std(0x151515, 0.6), 30));
+  let k = 0;
+  return {
+    group: g,
+    play(on) { this.on = on; },
+    update(dt) {
+      k += ((this.on ? 1 : 0) - k) * Math.min(1, dt * 3);
+      cart.position.set(-3, 6.65 + 12 * (1 - k) + 0.5, 22 - k * 16);
+      cart.rotation.x = -Math.PI / 2 * k;
+      led.emissiveIntensity = k > 0.95 ? 3 : 0;
+    },
+  };
+}
+
+// ---------- Game Boy ----------
+function gameboy() {
+  const g = new THREE.Group();
+  const body = std(0xc9c8c2, 0.55);
+  g.add(rbox(9, 14.8, 3.2, 0.6, body, 0, 7.4, 0));
+  g.add(rbox(7.2, 6.2, 0.2, 0.4, std(0x5a5c6e, 0.5), 0, 10.6, 1.62));
+  const scr = canvasTex(160, 144, () => {});
+  const screen = mesh(new THREE.PlaneGeometry(4.7, 4.25), new THREE.MeshStandardMaterial({ map: scr, roughness: 0.6 }), 0, 10.6, 1.74);
+  scr.magFilter = THREE.NearestFilter; scr.minFilter = THREE.NearestFilter;
+  g.add(screen);
+  g.add(box(2.4, 0.7, 0.4, M.black, -2.4, 4.9, 1.7), box(0.7, 2.4, 0.4, M.black, -2.4, 4.9, 1.7));
+  const ab = std(0x8b1f4d, 0.4);
+  g.add(cyl(0.55, 0.4, ab, 2.0, 4.4, 1.7, 'z'), cyl(0.55, 0.4, ab, 3.3, 5.2, 1.7, 'z'));
+  g.add(box(1.0, 0.25, 0.2, std(0x777777, 0.5), -0.7, 2.6, 1.65), box(1.0, 0.25, 0.2, std(0x777777, 0.5), 0.7, 2.6, 1.65));
+  // Falling-blocks demo in 4 shades of green
+  const shades = ['#9bbc0f', '#8bac0f', '#306230', '#0f380f'];
+  const grid = Array.from({ length: 18 }, () => Array(10).fill(0));
+  let piece = { x: 4, y: 0, c: 3 }, acc = 0;
+  const draw = () => {
+    const c = scr.userData.canvas.getContext('2d');
+    c.fillStyle = shades[0]; c.fillRect(0, 0, 160, 144);
+    c.fillStyle = shades[2]; c.fillRect(80, 0, 2, 144);
+    grid.forEach((row, y) => row.forEach((v, x) => { if (v) { c.fillStyle = shades[v]; c.fillRect(x * 8, y * 8, 7, 7); } }));
+    c.fillStyle = shades[piece.c]; for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) c.fillRect((piece.x + i) * 8, (piece.y + j) * 8, 7, 7);
+    c.fillStyle = shades[3]; c.font = '10px monospace'; c.fillText('SCORE', 100, 20); c.fillText(String(grid.flat().filter(Boolean).length * 10), 100, 34);
+    scr.needsUpdate = true;
+  };
+  draw();
+  return {
+    group: g,
+    play(on) { this.on = on; },
+    update(dt) {
+      if (!this.on) return;
+      acc += dt; if (acc < 0.12) return; acc = 0;
+      const below = piece.y + 2 >= 18 || grid[piece.y + 2][piece.x] || grid[piece.y + 2][piece.x + 1];
+      if (below) {
+        for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) grid[piece.y + j][piece.x + i] = piece.c;
+        for (let y = 17; y >= 0; y--) if (grid[y].every(Boolean)) { grid.splice(y, 1); grid.unshift(Array(10).fill(0)); }
+        if (grid[1].some(Boolean)) grid.forEach(r => r.fill(0));
+        piece = { x: Math.floor(Math.random() * 9), y: 0, c: 1 + Math.floor(Math.random() * 3) };
+      } else piece.y++;
+      draw();
+    },
+  };
+}
+
+// ---------- First iPhone ----------
+function iphone() {
+  const g = new THREE.Group();
+  g.add(rbox(6.1, 11.5, 1.16, 0.5, std(0xb9bdc3, 0.3, 1), 0, 5.75, 0));
+  g.add(rbox(5.9, 11.3, 0.05, 0.45, std(0x050506, 0.1, 0.2), 0, 5.75, 0.58));
+  const scr = canvasTex(320, 480, () => {});
+  const mat = new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0xffffff, emissiveMap: scr, emissiveIntensity: 0 });
+  g.add(mesh(new THREE.PlaneGeometry(4.95, 7.43), mat, 0, 6.0, 0.62));
+  g.add(cyl(0.55, 0.05, std(0x1b1b1d, 0.3), 0, 1.2, 0.61, 'z', 32));
+  const c = scr.userData.canvas.getContext('2d');
+  const grd = c.createLinearGradient(0, 0, 0, 480); grd.addColorStop(0, '#0c1a3a'); grd.addColorStop(1, '#2b5cd6');
+  c.fillStyle = grd; c.fillRect(0, 0, 320, 480);
+  const cols = ['#4ade80', '#ffc940', '#ff6b6b', '#4fe3ff', '#b064e6', '#f39a3d', '#59c7d8', '#d97ab5', '#7aa36d', '#e0584f', '#8c96a8', '#3f8fe8'];
+  cols.forEach((col, i) => { c.fillStyle = col; c.beginPath(); c.roundRect(22 + (i % 4) * 74, 40 + Math.floor(i / 4) * 90, 56, 56, 12); c.fill(); });
+  c.fillStyle = 'rgba(255,255,255,0.25)'; c.fillRect(0, 400, 320, 80);
+  ['#4ade80', '#4fe3ff', '#ffc940', '#ff6b6b'].forEach((col, i) => { c.fillStyle = col; c.beginPath(); c.roundRect(22 + i * 74, 412, 56, 56, 12); c.fill(); });
+  scr.needsUpdate = true;
+  return {
+    group: g,
+    play(on) { this.on = on; },
+    update(dt) { mat.emissiveIntensity += ((this.on ? 1 : 0.02) - mat.emissiveIntensity) * Math.min(1, dt * 4); },
+  };
+}
+
 // ---------- Museum hall ----------
 const BUILDERS = {
   punchcard: [punchCard, 18, { tilt: 0 }],
@@ -435,6 +573,10 @@ const BUILDERS = {
   floppy35: [floppy35, 12],
   cd: [cdrom, 13],
   usb: [usbStick, 12, { tilt: 0.4 }],
+  eniac: [eniac, 22, { spin: false }],
+  nes: [nes, 16],
+  gameboy: [gameboy, 13],
+  iphone: [iphone, 13],
   nvme: [nvme, 14],
 };
 
@@ -478,12 +620,14 @@ export function buildMuseum(envTex) {
 
   const pool = canvasTex(256, 256, (c, w) => { const g = c.createRadialGradient(128, 128, 10, 128, 128, 128); g.addColorStop(0, 'rgba(255,230,180,0.18)'); g.addColorStop(1, 'rgba(255,230,180,0)'); c.fillStyle = g; c.fillRect(0, 0, w, w); });
   const stone = std(0x2c313d, 0.55, 0.2); // dark plinths so the exhibits stand out
+  const shine = o => { if (o.material?.metalness > 0.9 && o.material.roughness < 0.15) { o.material.envMap = envTex; o.material.envMapIntensity = 2.2; } };
   const items = EXHIBIT_ORDER.map((id, i) => {
     const [make, size, opt = {}] = BUILDERS[id];
     const x = i * SP;
     const ex = make();
     const model = ex.group;
     shadow(model);
+    model.traverse(shine);
     model.traverse(o => { if (o.material && o.material.transparent && o.material.depthWrite === false) o.castShadow = false; });
     // Fit to display size and note the real scale honestly
     const b = new THREE.Box3().setFromObject(model), dim = b.getSize(new THREE.Vector3());

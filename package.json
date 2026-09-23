@@ -1,0 +1,6 @@
+{
+  "name": "pc-builder-lab",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node js/compat.test.js" }
+}

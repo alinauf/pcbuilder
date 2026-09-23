@@ -31,6 +31,7 @@
       <button data-mode="explore"><i>🔍</i><span>Explore</span></button>
       <button data-mode="build"><i>🔧</i><span>Build</span></button>
       <button data-mode="find"><i>🎯</i><span>Find It</span></button>
+      <button data-mode="fix"><i>🩺</i><span>Fix It</span></button>
       <button data-mode="chips"><i>🔬</i><span>Chip Lab</span></button>
       <button data-mode="museum"><i>🏛️</i><span>Museum</span></button>
     </nav>
@@ -40,12 +41,14 @@
         <button data-level="adult">🧑‍🔧 Grown-up</button>
       </div>
       <button id="mute" class="icon" aria-label="Sound on">🔊</button>
+      <button id="profileBtn" class="icon avatar" aria-label="Player and badges">🦊</button>
     </div>
   </header>
 
   <!-- Explore -->
   <div id="exploreUI" class="only-explore">
     <div class="toolbar glass">
+      <button id="tJourney" class="star">✨ <span>Journey of a click</span></button>
       <button id="tExplode">💥 <span>Explode</span></button>
       <button id="tGlass" class="on">🪟 <span>Glass</span></button>
       <button id="tPower" class="on">⚡ <span>Power</span></button>
@@ -75,7 +78,7 @@
     </div>
     <div class="trayWrap glass">
       <div class="trayHead"><b>📦 Parts box</b>
-        <span><button id="autoBtn">▶ Show me</button><button id="restartBtn">↺ Restart</button></span>
+        <span><button id="pickBtn">🛒 Pick your own parts</button><button id="autoBtn">▶ Show me</button><button id="restartBtn">↺ Restart</button></span>
       </div>
       <div id="tray" class="tray"></div>
     </div>
@@ -106,6 +109,21 @@
     <button id="calcBtn" class="calcBtn glass">💾 How many floppies?</button>
   </div>
 
+  <!-- Journey of a click -->
+  <div id="journey" class="bubble glass journey" aria-live="polite">
+    <div class="stepno n"></div>
+    <div class="how t"></div>
+    <div class="row"><button class="primary next">Next ▶</button><button class="stop">✕ Stop</button></div>
+  </div>
+
+  <!-- Fix It -->
+  <div id="fixUI" class="only-fix">
+    <div class="bubble glass">
+      <div class="stepno n"></div>
+      <div class="body"></div>
+    </div>
+  </div>
+
   <!-- Chip Lab -->
   <div id="chipUI" class="only-chips">
     <div id="chipTabs" class="chipTabs glass"></div>
@@ -123,6 +141,44 @@
       <p class="sub">One 3½" floppy holds 1.44 MB and is 3.3 mm thick. Pick something to store:</p>
       <div class="items"></div>
       <div class="result"></div>
+    </div>
+  </div>
+
+  <div id="picker" class="modal">
+    <div class="sheet glass wide">
+      <button class="x icon" aria-label="Close">✕</button>
+      <h2>🛒 Pick your own parts</h2>
+      <p class="sub">Choose one of each. The checker tells you if they’ll really fit together, just like when you buy parts for a real PC.</p>
+      <div class="pickGrid"><div class="cats"></div><div class="res"></div></div>
+    </div>
+  </div>
+
+  <div id="profile" class="modal">
+    <div class="sheet glass">
+      <button class="x icon" aria-label="Close">✕</button>
+      <h2>🏅 Player &amp; badges</h2>
+      <div class="players"></div>
+      <label class="nameRow">Name <input maxlength="24" autocomplete="off"></label>
+      <div class="avatars"></div>
+      <p class="count"></p>
+      <div class="badges"></div>
+      <div class="row"><button id="certBtn" class="primary">🖨️ Make my certificate</button></div>
+    </div>
+  </div>
+
+  <div id="cert" class="modal">
+    <div class="sheet certificate">
+      <button class="x icon noprint" aria-label="Close">✕</button>
+      <div class="frame">
+        <p class="kicker">PC Builder Lab</p>
+        <h2>Certified PC Builder</h2>
+        <p>This certifies that</p>
+        <p class="who"></p>
+        <p>has learned the parts of a computer and earned these badges:</p>
+        <div class="got"></div>
+        <p class="date"></p>
+      </div>
+      <div class="row noprint"><button class="primary print">🖨️ Print</button></div>
     </div>
   </div>
 

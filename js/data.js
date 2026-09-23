@@ -78,6 +78,20 @@ export const PARTS = {
     facts: ['The 24-pin plug is the hardest to push in. Squeeze the clip and push firmly until it clicks.', 'Each connector is shaped so it only fits one way.'],
     specs: { Motherboard: '24-pin ATX', CPU: '8-pin EPS', GPU: '2 × PCIe 8-pin' },
   },
+  monitor: {
+    name: 'Monitor', emoji: '🖥️', role: 'The Picture Window',
+    kid: 'The monitor shows you what the computer is thinking. The graphics card sends it a brand-new picture over and over, super fast, like a flip-book.',
+    adult: 'A 27-inch 2560 × 1440 IPS monitor at 144 Hz. The refresh rate is how many new frames per second it can show. It connects to the graphics card over DisplayPort or HDMI. Plug it into the GPU’s ports, not the motherboard’s, or you’ll get the CPU’s built-in graphics or no picture at all.',
+    facts: ['Look very closely at a screen and every picture is made of tiny red, green and blue dots called pixels.', 'This monitor has about 3.7 million pixels, and it changes them up to 144 times a second.'],
+    specs: { Size: '27-inch, 16:9', Resolution: '2560 × 1440', 'Refresh rate': '144 Hz', Input: 'DisplayPort 1.4 / HDMI 2.0' },
+  },
+  keyboard: {
+    name: 'Keyboard', emoji: '⌨️', role: 'How You Talk to It',
+    kid: 'The keyboard is how you talk to the computer. Every key is a tiny switch. Press it, and a little message zooms down the cable.',
+    adult: 'A USB keyboard. The keys form a matrix of switches, and a small microcontroller scans the matrix many times a second. When a key is pressed, it sends a HID scan code (0x04 for “A”) when the PC polls it, usually 125 to 1000 times per second.',
+    facts: ['Mechanical keyboards have a separate spring-loaded switch under every key.', 'The keys are in the QWERTY order because of typewriters from the 1870s!'],
+    specs: { Connection: 'USB', 'Polling rate': 'up to 1000 Hz', Layout: 'Full size, 104 keys' },
+  },
   panel: {
     name: 'Glass Side Panel', emoji: '🪟', role: 'The Window',
     kid: 'A see-through window so you can look at everything you built!',
@@ -221,6 +235,34 @@ export const EXHIBITS = {
     adult: 'Sony and Philips created the Compact Disc in 1982, and CD-ROM followed for data in 1985. A 780 nm laser reads tiny "pits" and "lands" pressed into a spiral track about 5.4 km long. It holds 650 to 700 MB (74 to 80 minutes of audio). The rainbow effect happens because the tracks are so close together (1.6 µm apart) that they split light like a prism.',
     fact: 'If you unrolled the spiral track on a CD, it would be over 5 km long!',
   },
+  eniac: {
+    name: 'ENIAC', year: '1945', emoji: '🏭', play: 'Run a calculation',
+    stats: [['Weight', '~27 tonnes'], ['Speed', '5,000 additions/sec']],
+    kid: 'ENIAC was one of the very first electronic computers. It filled a whole room, used 17,468 glowing glass tubes, and people “programmed” it by plugging in cables and flipping switches, like an old telephone switchboard!',
+    adult: 'The Electronic Numerical Integrator and Computer was completed in 1945 at the University of Pennsylvania and unveiled in 1946. It was built to calculate artillery firing tables. It had about 17,468 vacuum tubes, weighed around 27 tonnes and could do 5,000 additions per second. It was programmed by rewiring plugboards and setting switches. Its first programmers were six women: Kathleen McNulty, Jean Jennings, Betty Snyder, Marlyn Wescoff, Frances Bilas and Ruth Lichterman.',
+    fact: 'A cheap calculator today is faster than ENIAC, and your phone is millions of times faster.',
+  },
+  nes: {
+    name: 'Games Console (NES)', year: '1985', emoji: '🎮', play: 'Insert a cartridge',
+    stats: [['CPU', '1.79 MHz'], ['RAM', '2 KB']],
+    kid: 'The Nintendo Entertainment System brought video games into millions of homes. Games came on big plastic cartridges that you pushed in and pressed down.',
+    adult: 'The NES launched in North America in 1985 (the Famicom came out in Japan in 1983). It used a Ricoh 2A03 CPU (a 6502 core) at about 1.79 MHz with 2 KB of RAM. Each cartridge held the game’s ROM chips, and some added extra memory and a battery for saving.',
+    fact: 'Blowing into cartridges didn’t really fix them. Taking the cartridge out and putting it back in did. The moisture from your breath could even damage the contacts!',
+  },
+  gameboy: {
+    name: 'Game Boy', year: '1989', emoji: '🕹️', play: 'Play blocks',
+    stats: [['Screen', '160 × 144, 4 shades'], ['Batteries', '4 × AA']],
+    kid: 'A games console you could hold in your hands! The screen had just 4 shades of green, but kids played it everywhere, especially the falling-blocks puzzle game.',
+    adult: 'Nintendo’s Game Boy (1989) had a Sharp CPU at about 4.19 MHz, 8 KB of RAM and a 160 × 144 reflective LCD with 4 shades. There was no backlight, which helped four AA batteries last a very long time. Together with the Game Boy Color, it sold about 119 million units.',
+    fact: 'No backlight meant you needed a lamp to play in the dark, but the batteries lasted for days of play.',
+  },
+  iphone: {
+    name: 'First iPhone', year: '2007', emoji: '📱', play: 'Turn it on',
+    stats: [['Screen', '3.5-inch, 320 × 480'], ['Storage', '4 or 8 GB']],
+    kid: 'A phone with no keyboard: just a big touch screen you could swipe with your finger. It was also a music player and an internet computer that fit in your pocket.',
+    adult: 'Apple announced the iPhone on 9 January 2007 and released it that June. It had a 3.5-inch multi-touch screen (320 × 480), 128 MB of RAM, 4 or 8 GB of storage and an ARM processor at roughly 400 MHz. Multi-touch plus a full web browser changed how people used phones.',
+    fact: 'Modern phones are thousands of times faster than the first iPhone, and far more powerful than the IBM PC in this museum.',
+  },
   usb: {
     name: 'USB Flash Drive', year: '2000', emoji: '🔑', play: 'Plug it in',
     stats: [['First (2000)', '8 MB'], ['Today', 'up to 2 TB']],
@@ -236,7 +278,7 @@ export const EXHIBITS = {
     fact: 'The 1956 hard drive weighed about a tonne and held 3.75 MB. A 2 TB one weighs about 7 grams and holds over 500,000 times more.',
   },
 };
-export const EXHIBIT_ORDER = ['punchcard', 'tube', 'transistor', 'hdd', 'i4004', 'floppy8', 'floppy525', 'ibmpc', 'floppy35', 'cd', 'usb', 'nvme'];
+export const EXHIBIT_ORDER = ['punchcard', 'tube', 'eniac', 'transistor', 'hdd', 'i4004', 'floppy8', 'floppy525', 'ibmpc', 'floppy35', 'cd', 'nes', 'gameboy', 'usb', 'iphone', 'nvme'];
 
 // "How many floppies?" calculator (1.44 MB disk = 1,474,560 bytes, 3.3 mm thick)
 export const FLOPPY_ITEMS = [
@@ -440,3 +482,95 @@ export const CHIPS = {
   },
 };
 export const CHIP_ORDER = ['m5', 'desktop', 'gpu', 'dimm', 'dram'];
+
+
+// ---------- Journey of a click ----------
+export const JOURNEY = [
+  { at: 'key', kid: 'You press the A key! Under it, a tiny switch closes, like flicking on a light.', adult: 'The key switch closes a circuit in the keyboard matrix. The keyboard’s microcontroller spots it on its next scan (debouncing takes a few milliseconds).' },
+  { at: 'usb', kid: 'A little message zooms down the cable: “Key A was pressed!”', adult: 'The keyboard sends a USB HID report with scan code 0x04 (“A”) the next time the host polls it, up to 1000 times per second.' },
+  { at: 'cpu', kid: 'The message travels along the motherboard roads to the brain, the CPU.', adult: 'The USB controller signals an interrupt. The operating system’s driver reads the report and turns it into a key event for the app you’re typing in.' },
+  { at: 'ram', kid: 'The brain checks its desk (RAM): which story are we writing, and what does the letter A look like?', adult: 'The app’s code, your document and the font’s glyph outlines all sit in RAM. The CPU fetches them through its caches.' },
+  { at: 'cpu2', kid: 'The brain decides: “Draw an A at the end of the story!”', adult: 'The app adds the character, lays out the text and asks the graphics system to redraw that part of the window.' },
+  { at: 'gpu', kid: 'The artist (the graphics card) paints the letter A with thousands of tiny painters at once.', adult: 'Draw commands cross PCIe to the GPU. The GPU rasterises the glyph and composites the window into a frame buffer in VRAM.' },
+  { at: 'cable', kid: 'The finished picture races down the cable to the monitor.', adult: 'The GPU’s display engine sends the frame out over DisplayPort on the next refresh (every ~7 ms at 144 Hz).' },
+  { at: 'screen', kid: 'And there’s your A! The whole trip was faster than a blink of an eye.', adult: 'Done! From key press to pixels, typical end-to-end input latency is somewhere around 10 to 50 ms, faster than a blink (~100 to 400 ms).' },
+];
+
+// ---------- Fix It: real first-build problems ----------
+export const FIXES = [
+  { id: 'psuSwitch', fix: ['psu'], power: 0, screen: 'off',
+    kid: 'You press the power button… nothing happens at all. No lights, no fans. Hmm!', adult: 'No response to the power button: no fans, no LEDs.',
+    hint: 'Where does ALL the power come from? Check the back of it.',
+    done: 'The switch on the back of the power supply was set to O (off). Flip it to I (on)! Always check the easy things first.' },
+  { id: 'atx24', fix: ['cables', 'motherboard'], power: 0, screen: 'off',
+    kid: 'The power supply switch is ON, but pressing the power button still does nothing.', adult: 'The PSU is switched on, but the system won’t start and the board shows no standby LEDs.',
+    hint: 'The motherboard needs its big main power cable. Is it plugged in?',
+    done: 'The big 24-pin cable wasn’t plugged into the motherboard. It needs a firm push until it clicks.' },
+  { id: 'ram', fix: ['ram'], power: 1, screen: 'nosignal', beeps: true,
+    kid: 'The fans spin, but the screen stays black and the computer goes beeeep… beeeep…', adult: 'Fans spin, no POST, long repeating beeps, and the DRAM debug LED is lit.',
+    hint: 'Long beeps usually mean the desk (memory) isn’t working. Look closely at it.',
+    done: 'The RAM sticks weren’t pushed all the way in. Press firmly until both clips snap shut!' },
+  { id: 'gpuPower', fix: ['gpu', 'cables'], power: 1, screen: 'nosignal', gpuLed: true,
+    kid: 'It turns on, but the monitor says “No Signal”, and there’s a little red light on the graphics card.', adult: 'The system powers on, the monitor shows no signal, and the GPU’s power-warning LED is red.',
+    hint: 'The artist is hungry! Big graphics cards need their own power cables.',
+    done: 'The graphics card’s power cables were missing. Plug in both 8-pin plugs and the red light goes out.' },
+  { id: 'wrongPort', fix: ['monitor'], power: 1, screen: 'nosignal', wrongPort: true,
+    kid: 'Everything is running and the fans are spinning, but the monitor still says “No Signal”.', adult: 'The system is running and the GPU has power, but the display shows no signal.',
+    hint: 'Follow the monitor’s cable. Where is it plugged in?',
+    done: 'The monitor cable was plugged into the motherboard! Plug it into the graphics card instead. That’s where the pictures come from.' },
+  { id: 'cooler', fix: ['cooler'], power: 1, screen: 'desktop', coolerOff: true,
+    kid: 'The computer works… but after a few minutes it switches itself off, and it feels hot near the brain!', adult: 'The system shuts down under load, and CPU temperatures hit the thermal limit.',
+    hint: 'Which fan isn’t spinning?',
+    done: 'The CPU cooler’s fan was unplugged, so the brain got too hot and shut down to protect itself. Plug the fan into CPU_FAN.' },
+];
+
+// ---------- Parts picker ----------
+export const PICKER = {
+  case: [
+    { id: 'mid', name: 'Mid-tower case', emoji: '🏠', fits: ['ATX', 'mATX', 'ITX'], gpuMax: 380, coolerMax: 170, note: 'Room for everything' },
+    { id: 'itx', name: 'Tiny Mini-ITX case', emoji: '📦', fits: ['ITX'], gpuMax: 320, coolerMax: 70, note: 'Small and cute, but tight' },
+  ],
+  cpu: [
+    { id: 'am5', name: '8-core CPU (AM5)', emoji: '🧠', socket: 'AM5', igpu: true, watts: 142, note: 'Socket AM5 · DDR5' },
+    { id: 'lga', name: '14-core CPU (LGA1700)', emoji: '🧠', socket: 'LGA1700', igpu: true, watts: 180, note: 'Socket LGA1700' },
+    { id: 'am4', name: '6-core CPU (AM4, older)', emoji: '🧠', socket: 'AM4', igpu: false, watts: 88, note: 'Socket AM4 · no built-in graphics' },
+  ],
+  board: [
+    { id: 'b650', name: 'AM5 ATX board', emoji: '🏙️', socket: 'AM5', mem: 'DDR5', size: 'ATX', note: 'AM5 · DDR5 · ATX' },
+    { id: 'b760d4', name: 'LGA1700 ATX board (DDR4)', emoji: '🏙️', socket: 'LGA1700', mem: 'DDR4', size: 'ATX', note: 'LGA1700 · DDR4 · ATX' },
+    { id: 'b760itx', name: 'LGA1700 Mini-ITX board', emoji: '🏙️', socket: 'LGA1700', mem: 'DDR5', size: 'ITX', note: 'LGA1700 · DDR5 · Mini-ITX' },
+    { id: 'b550', name: 'AM4 Micro-ATX board', emoji: '🏙️', socket: 'AM4', mem: 'DDR4', size: 'mATX', note: 'AM4 · DDR4 · Micro-ATX' },
+  ],
+  ram: [
+    { id: 'ddr5', name: '32 GB DDR5', emoji: '📝', mem: 'DDR5', note: '2 × 16 GB, 6000 MT/s' },
+    { id: 'ddr4', name: '32 GB DDR4', emoji: '📝', mem: 'DDR4', note: '2 × 16 GB, 3200 MT/s' },
+  ],
+  gpu: [
+    { id: 'none', name: 'No graphics card', emoji: '🚫', watts: 0, length: 0, note: 'Use the CPU’s built-in graphics' },
+    { id: 'mid', name: 'Mid-range card', emoji: '🎨', watts: 165, length: 245, note: '245 mm · ~165 W' },
+    { id: 'big', name: 'Huge high-end card', emoji: '🎨', watts: 320, length: 336, note: '336 mm · ~320 W' },
+  ],
+  cooler: [
+    { id: 'tower', name: 'Tower air cooler', emoji: '❄️', height: 155, note: '155 mm tall' },
+    { id: 'low', name: 'Low-profile cooler', emoji: '❄️', height: 47, note: '47 mm tall' },
+  ],
+  psu: [
+    { id: 450, name: '450 W power supply', emoji: '❤️', watts: 450, note: '80 PLUS Bronze' },
+    { id: 650, name: '650 W power supply', emoji: '❤️', watts: 650, note: '80 PLUS Gold' },
+    { id: 850, name: '850 W power supply', emoji: '❤️', watts: 850, note: '80 PLUS Gold' },
+  ],
+};
+
+// ---------- Badges ----------
+export const BADGES = [
+  { id: 'firstBuild', emoji: '🛠️', name: 'First Build', desc: 'Built a whole computer' },
+  { id: 'perfectBuild', emoji: '🌟', name: 'Perfect Build', desc: 'Built it with no mistakes' },
+  { id: 'finder', emoji: '🎯', name: 'Sharp Eyes', desc: 'Got 3 stars in Find It' },
+  { id: 'journey', emoji: '✨', name: 'Click Tracker', desc: 'Followed the journey of a click' },
+  { id: 'doctor', emoji: '🩺', name: 'PC Doctor', desc: 'Fixed every broken computer' },
+  { id: 'shopper', emoji: '🛒', name: 'Smart Shopper', desc: 'Picked parts that all fit together' },
+  { id: 'chips', emoji: '🔬', name: 'Chip Explorer', desc: 'Looked inside all 5 chips' },
+  { id: 'museum', emoji: '🏛️', name: 'Time Traveller', desc: 'Visited every museum exhibit' },
+  { id: 'curious', emoji: '🔍', name: 'Curious Mind', desc: 'Learned about 10 different parts' },
+];
+export const AVATARS = ['🦊', '🐼', '🦁', '🐸', '🐙', '🦄', '🐯', '🐧', '🤖', '🚀'];

@@ -1,4 +1,5 @@
-import { THREE, rgbMats, ghostOf, canvasTex, mesh, box } from './kit.js';
+import { THREE, M, rgbMats, ghostOf, canvasTex, mesh, box } from './kit.js';
+import { createProfiles, createJourney, createFixIt, createPicker } from './features.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
@@ -31,6 +32,8 @@ renderer.toneMappingExposure = 1.05;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 const envTex = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
+// Glass gets its own dim reflections so it reads as clear, not milky
+M.glass.envMap = envTex; M.glass.envMapIntensity = 0.3; M.glass.opacity = 0.16; M.glass.color.set(0x0e1218); M.glass.side = THREE.FrontSide;
 
 const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 1, 3000);
 camera.position.set(80, 60, 120);
@@ -123,6 +126,8 @@ function runTweens(dt) {
     if (k >= 1) { tweens.delete(tw); tw.res(); }
   }
 }
+// Pull the camera back on portrait screens so wide scenes still fit.
+const fit = (target, camPos) => target.clone().add(camPos.clone().sub(target).multiplyScalar(Math.max(1, 0.9 / camera.aspect)));
 function fly(target, camPos, dur = 1.3) {
   const t0 = controls.target.clone(), c0 = camera.position.clone();
   return tween(dur, k => { controls.target.lerpVectors(t0, target, k); camera.position.lerpVectors(c0, camPos, k); });
@@ -178,7 +183,7 @@ const say = text => {
 const power = { level: 0, target: 0 };
 function updatePower(dt, t) {
   power.level += (power.target - power.level) * Math.min(1, dt * 1.2);
-  for (const f of pc.fans) f.refs.rotor.rotation.z += dt * 30 * power.level;
+  for (const f of pc.fans) if (!f.userData.stopped) f.refs.rotor.rotation.z += dt * 30 * power.level;
   for (const m of rgbMats) {
     m.emissiveIntensity = power.level * 2.4 * (m.userData.k ?? 1);
     m.emissive.setHSL((m.userData.hue + t * 0.04) % 1, 1, 0.55);
@@ -224,17 +229,23 @@ function resetPC(assembled) {
   pc.pcCase.refs.gpuSlotCovers.visible = !assembled;
   P.paste.obj.scale.set(assembled ? 3.4 : 1, assembled ? 3.4 : 1, assembled ? 0.2 : 1);
   setCables(assembled ? 1 : 0);
-  moboBox.visible = antiMat.visible = true;
+  moboBox.visible = !assembled; antiMat.visible = true;
+  fixIt?.clean();
+  journey?.stop();
+  pc.periph.kbCable.visible = pc.periph.dpCable.visible = assembled;
+  pc.monitor.refs.set('off');
 }
+let fixIt = null, journey = null, profiles = null;
 
 // ---------- Labels ----------
 const labelObjs = [];
-for (const id of ['cpu', 'cooler', 'ram', 'ssd', 'gpu', 'psu', 'motherboard', 'fans', 'cables', 'case']) {
+for (const id of ['cpu', 'cooler', 'ram', 'ssd', 'gpu', 'psu', 'motherboard', 'fans', 'cables', 'case', 'monitor', 'keyboard']) {
   const obj = P[id].obj, el = document.createElement('div');
   el.className = 'tag'; el.textContent = `${PARTS[id].emoji} ${PARTS[id].name.split(' (')[0]}`;
   const anchor = {
     cpu: V(0, 0, 0.6), cooler: V(0, 0, 15.8), ram: V(0, -6.6, 4.8), ssd: V(4, 0, 0.3), gpu: V(22, -2, 12.5),
     psu: V(4, 4.3, 7.5), motherboard: V(21, -26, 0.3), fans: V(20.6, 34.6, 6), cables: V(3, 33, -2), case: V(22, 46, 10),
+    monitor: V(0, 50, 0), keyboard: V(0, 3, 0),
   }[id];
   const lo = new CSS2DObject(el); lo.position.copy(anchor); lo.center.set(0.5, 1.2);
   obj.add(lo); labelObjs.push(lo);
@@ -291,6 +302,7 @@ function showInfo(id) {
   info.querySelector('.facts').innerHTML = d.facts.map(f => `<li>${esc(f)}</li>`).join('');
   info.querySelector('.specs').innerHTML = level === 'kid' ? '' : Object.entries(d.specs).map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('');
   info.classList.add('open');
+  profiles.track('parts', id, 10, 'curious');
 }
 const hideInfo = () => { info.classList.remove('open'); infoId = null; };
 info.querySelector('.close').onclick = hideInfo;
@@ -299,8 +311,8 @@ info.querySelector('.speak').onclick = () => { const d = PARTS[infoId]; if (d) s
 // ---------- Modes ----------
 let mode = null;
 const views = {
-  overview: () => fly(V(0, 20, 0), V(62, 48, 92)),
-  build: () => fly(V(-28, 8, 6), V(-8, 70, 120)),
+  overview: () => fly(V(0, 20, 0), fit(V(0, 20, 0), V(62, 48, 92))),
+  build: () => fly(V(-28, 8, 6), fit(V(-28, 8, 6), V(-8, 70, 120))),
 };
 function setMode(m) {
   if (mode === m) return;
@@ -320,6 +332,7 @@ function setMode(m) {
   if (m === 'find') enterFind();
   if (isMuseum) enterMuseum();
   if (m === 'chips') enterChips();
+  if (m === 'fix') enterFix();
 }
 const sceneFor = m => (m === 'museum' ? museum.scene : m === 'chips' ? chipLab.scene : workshop);
 
@@ -328,6 +341,7 @@ function enterExplore() {
   resetPC(true);
   moboBox.visible = false;
   power.target = 1;
+  pc.monitor.refs.set('desktop');
   showLabels(labelsOn);
   $('#tExplode').classList.remove('on'); $('#tGlass').classList.add('on'); $('#tPower').classList.add('on');
   views.overview();
@@ -340,7 +354,8 @@ $('#tExplode').onclick = e => {
   if (on) fly(V(0, 22, 12), V(75, 55, 120));
 };
 $('#tGlass').onclick = e => { P.panel.obj.visible = e.currentTarget.classList.toggle('on'); sfx.click(); };
-$('#tPower').onclick = e => { const on = e.currentTarget.classList.toggle('on'); power.target = on ? 1 : 0; on ? whoosh(2) : sfx.click(); };
+$('#tPower').onclick = e => { const on = e.currentTarget.classList.toggle('on'); power.target = on ? 1 : 0; pc.monitor.refs.set(on ? 'desktop' : 'off'); on ? whoosh(2) : sfx.click(); };
+$('#tJourney').onclick = () => { sfx.pop(); journey.start(); };
 $('#tLabels').onclick = e => { showLabels(e.currentTarget.classList.toggle('on')); sfx.click(); };
 $('#tReset').onclick = () => views.overview();
 
@@ -585,6 +600,8 @@ async function boot() {
   const d = bootEl.querySelector('.done');
   d.querySelector('.stats').innerHTML = `⏱️ ${Math.floor(secs / 60)}m ${secs % 60}s &nbsp;·&nbsp; ${build.mistakes === 0 ? '🌟 No mistakes!' : `🔁 ${build.mistakes} tr${build.mistakes === 1 ? 'y' : 'ies'} to get it right`}`;
   d.hidden = false;
+  pc.monitor.refs.set('desktop');
+  profiles.award('firstBuild'); if (build.mistakes === 0) profiles.award('perfectBuild');
   sfx.ok(); confetti();
   say(level === 'kid' ? 'Hooray! You built a computer!' : 'System booted successfully. Build complete.');
 }
@@ -612,6 +629,7 @@ function enterFind() {
   resetPC(true);
   moboBox.visible = false;
   power.target = 1;
+  pc.monitor.refs.set('desktop');
   showLabels(false);
   find.list = [...FIND].sort(() => Math.random() - 0.5);
   Object.assign(find, { i: 0, score: 0, tries: 0, lock: false });
@@ -638,6 +656,7 @@ function answerFind(id) {
       if (mode !== 'find') return;
       if (find.i >= find.list.length) {
         const stars = Math.round(find.score / find.list.length * 3);
+        if (stars >= 3) profiles.award('finder');
         $('#findQ').textContent = `You found them all! ${'⭐'.repeat(stars) || '👍'}`;
         $('#findFb').innerHTML = `Score: ${find.score} / ${find.list.length}. <button class="link" id="findAgain">Play again ↺</button>`;
         $('#findAgain').onclick = () => { mode = null; setMode('find'); };
@@ -661,6 +680,7 @@ function enterMuseum() {
 function focusExhibit(i, instant) {
   exIndex = (i + museum.items.length) % museum.items.length;
   const it = museum.items[exIndex], ex = EXHIBITS[it.id];
+  profiles.track('museum', it.id, EXHIBIT_ORDER.length, 'museum');
   museum.items.forEach(m => { if (m !== it && m.playing) { m.playing = false; m.ex.play(false); } });
   // On wide screens the info card covers the right side, so aim a little right of the exhibit to shift it left.
   const t = it.focus.clone().add(V(innerWidth > 900 ? it.size * 0.45 : 0, innerWidth > 900 ? 0 : -it.size * 0.25, 0));
@@ -775,6 +795,7 @@ function renderChipCard() {
   };
 }
 function selectBlock(id) {
+  profiles.track('chips', chipId, CHIP_ORDER.length, 'chips');
   if (id && !chipLab.state.open) { chipLab.setOpen(true); whoosh(0.6); }
   chipLab.select(id);
   sfx.click();
@@ -786,6 +807,7 @@ function selectBlock(id) {
 $('#lidBtn').onclick = () => {
   const open = !chipLab.state.open;
   chipLab.setOpen(open);
+  if (open) profiles.track('chips', chipId, CHIP_ORDER.length, 'chips');
   if (!open) { outline.selectedObjects = []; }
   open ? whoosh(0.8) : sfx.snap();
   renderChipCard();
@@ -832,6 +854,8 @@ function onClick(e) {
     else hideInfo();
   } else if (mode === 'find') {
     answerFind(pickPart(e));
+  } else if (mode === 'fix') {
+    fixIt.answer(pickPart(e));
   } else if (mode === 'build') {
     if (build.awaitPower) {
       if (hits(e, [powerRefs.btn]).length) place();
@@ -863,14 +887,14 @@ canvas.addEventListener('pointermove', e => {
     else tip.className = '';
     return;
   }
-  if (mode !== 'explore' && mode !== 'find') { tip.className = ''; return; }
+  if ((mode !== 'explore' && mode !== 'find' && mode !== 'fix') || journey.running) { tip.className = ''; return; }
   const id = pickPart(e);
   if (id !== hoverId) {
     hoverId = id;
     outline.selectedObjects = id && PARTS[id] && id !== 'case' ? [P[id].obj] : [];
     canvas.style.cursor = id ? 'pointer' : '';
   }
-  if (id && PARTS[id] && mode === 'explore') {
+  if (id && PARTS[id] && (mode === 'explore' || mode === 'fix')) {
     tip.textContent = `${PARTS[id].emoji} ${PARTS[id].name}`;
     tip.style.transform = `translate(${e.clientX + 14}px, ${e.clientY + 14}px)`;
     tip.className = 'show';
@@ -951,6 +975,7 @@ function tick(dt = Math.min(clock.getDelta(), 0.05)) {
     updatePower(dt, t);
     if (build.hover && !build.busy) build.hover.position.copy(build.hoverBase).addScaledVector(build.hoverAxis, Math.sin(t * 2.5) * 0.5);
     if (build.ghost) build.ghost.ghostMat.opacity = 0.18 + 0.14 * Math.sin(t * 4);
+    journey.update();
   }
   controls.update();
   composer.render();
@@ -958,12 +983,35 @@ function tick(dt = Math.min(clock.getDelta(), 0.05)) {
 }
 function loop() { tick(); requestAnimationFrame(loop); }
 
+// ---------- Journey, Fix It, picker, profiles ----------
+profiles = createProfiles({ $, $$, esc, toast, confetti, sfx, store });
+journey = createJourney({
+  $, esc, P, pc, camera, controls, tween, wait, say, sfx, confetti,
+  level: () => level, isMuted: () => muted,
+  prepare() { hideInfo(); outline.selectedObjects = []; tip.className = ''; if (explodeState.k) { setExplode(0); $('#tExplode').classList.remove('on'); } P.panel.obj.visible = false; labels.domElement.classList.add('off'); power.target = 1; },
+  restore() { P.panel.obj.visible = $('#tGlass').classList.contains('on') && mode === 'explore'; showLabels(labelsOn); },
+  onDone: () => profiles.award('journey'),
+});
+fixIt = createFixIt({
+  $, esc, P, pc, power, sfx, tone, toast, confetti, tween, resetPC,
+  level: () => level,
+  view: () => fly(V(12, 20, 0), fit(V(12, 20, 0), V(70, 58, 118))),
+  onDone: () => profiles.award('doctor'),
+});
+createPicker({ $, $$, esc, sfx, confetti, level: () => level, onDone: () => profiles.award('shopper') });
+function enterFix() {
+  showLabels(false);
+  moboBox.visible = false;
+  fixIt.start();
+  moboBox.visible = false;
+}
+
 // ---------- Start ----------
 resetPC(false);
 try { thumbs = makeThumbs(); } catch (err) { console.warn('thumbnails skipped', err); }
 setLevel(level);
 const startMode = new URLSearchParams(location.search).get('mode') || store.get('mode') || 'explore';
-setMode(['explore', 'build', 'find', 'chips', 'museum'].includes(startMode) ? startMode : 'explore');
-window.pcLab = { camera, controls, P, pc, museum, chipLab, setMode, fly, V, tick }; // handy for poking around in the console
+setMode(['explore', 'build', 'find', 'fix', 'chips', 'museum'].includes(startMode) ? startMode : 'explore');
+window.pcLab = { camera, controls, P, pc, museum, chipLab, journey, fixIt, profiles, setMode, fly, V, tick }; // handy for poking around in the console
 loop();
 $('#loading').classList.add('gone');
