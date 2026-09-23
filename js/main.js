@@ -192,6 +192,7 @@ function setExplode(k) {
   explodeState.k = k;
   pc.root.traverse(o => { if (o.userData.explode && o.userData.home) o.position.copy(o.userData.home).addScaledVector(o.userData.explode, k); });
   P.cables.obj.visible = k < 0.02;
+  if (mode === 'explore') P.panel.obj.visible = k < 0.3 && $('#tGlass').classList.contains('on');
 }
 function setCables(k) {
   P.cables.obj.traverse(o => { if (o.userData.total) o.geometry.setDrawRange(0, Math.floor(o.userData.total * k / 3) * 3); });
