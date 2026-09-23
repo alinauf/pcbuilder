@@ -19,7 +19,7 @@ export const PARTS = {
     name: 'CPU (Processor)', emoji: '🧠', role: 'The Brain',
     kid: 'The CPU is the brain! It solves billions of tiny math problems every single second. That is faster than everyone on Earth counting together.',
     adult: 'The Central Processing Unit runs program instructions. Desktop CPUs today have 6 to 24 cores and run at about 4 to 6 GHz, with billions of transistors. The metal lid (IHS, the integrated heat spreader) moves heat from the silicon underneath to the cooler. The gold triangle in one corner marks pin 1: line it up with the triangle on the socket.',
-    facts: ['The first microprocessor (Intel 4004, 1971) had 2,300 transistors. A modern CPU has billions.', 'Never push a CPU into its socket. Lay it in gently and let the lever do the work. Bent pins are the #1 building mistake!'],
+    facts: ['Look inside a CPU (and Apple’s M5) in 🔬 Chip Lab.', 'The first microprocessor (Intel 4004, 1971) had 2,300 transistors. A modern CPU has billions.', 'Never push a CPU into its socket. Lay it in gently and let the lever do the work. Bent pins are the #1 building mistake!'],
     specs: { Cores: '8 cores / 16 threads', Speed: 'up to 4.8 GHz', Size: '4 × 4 cm', Power: '~105 W' },
   },
   paste: {
@@ -40,7 +40,7 @@ export const PARTS = {
     name: 'RAM (Memory)', emoji: '📝', role: 'The Desk',
     kid: "RAM is the computer's desk. Whatever you're working on right now sits on the desk so it's quick to grab. When the power turns off, the desk gets wiped clean!",
     adult: 'Random Access Memory (DDR5 DIMMs) is very fast working memory for programs that are running. It is volatile: it forgets everything when the power goes off. With two sticks, use slots A2 and B2 (the 2nd and 4th from the CPU) for dual-channel mode. The notch in the gold contacts is off-centre, so a stick only fits one way, and DDR4 and DDR5 have their notches in different places.',
-    facts: ['This is why you save your work! Saving copies it from RAM (the desk) to the SSD (the bookshelf).', 'Press RAM straight down until both clips click. It needs more force than you expect.'],
+    facts: ['This is why you save your work! Saving copies it from RAM (the desk) to the SSD (the bookshelf).', 'Press RAM straight down until both clips click. It needs more force than you expect.', 'Want to see inside? Open 🔬 Chip Lab → RAM stick.'],
     specs: { Type: 'DDR5-6000', Capacity: '2 × 16 GB = 32 GB', Channels: 'Dual channel' },
   },
   ssd: {
@@ -255,3 +255,188 @@ export const HEIGHTS = [
   { name: 'the Burj Khalifa', emoji: '🏙️', m: 828 },
   { name: 'Mount Everest', emoji: '🏔️', m: 8849 },
 ];
+
+// ---------- Chip Lab ----------
+// Floorplans are simplified: block positions follow the real designs' general arrangement, sizes are approximate.
+// Coordinates: package-space units (≈ mm); each die's blocks use die-local x (right) / z (down) from its top-left corner.
+const B = (id, name, x, z, w, d, color, pattern, extra = {}) => ({ id, name, x, z, w, d, color, pattern, ...extra });
+
+export const CHIPS = {
+  m5: {
+    name: 'Apple M5', emoji: '🍎', year: '2025', tagline: 'A whole computer on one chip',
+    note: 'Simplified layout: Apple doesn’t publish the exact floorplan.',
+    stats: [['Made with', '3 nm transistors'], ['CPU', '10 cores (4 P + 6 E)'], ['GPU', '10 cores'], ['Memory speed', '153 GB/s']],
+    kid: 'Apple’s M5 is a “system on a chip”. The brain, the artist, the AI helper and the video player all live together on ONE piece of silicon, and they share the same memory right next door.',
+    adult: 'The M5 is an SoC (system on a chip) built on third-generation 3 nm technology. It combines a 10-core CPU (4 performance + 6 efficiency cores), a 10-core GPU with a Neural Accelerator in every GPU core, a 16-core Neural Engine, media engines, and a unified memory system (up to 32 GB of LPDDR5X at 153 GB/s) that the CPU, GPU and Neural Engine all read directly, with no copying between them.',
+    package: { w: 26, d: 30, color: '#1f4d36' },
+    lid: { x: -8.4, z: -12.4, w: 16.8, d: 14.8, label: 'M5', sub: 'Apple silicon' },
+    sources: [[-4, 9], [4, 9]],
+    dies: [
+      { x: -8, z: -12, w: 16, d: 14, blocks: [
+        B('pcore', 'P-cores', 0, 0, 6, 4.2, '#e0584f', 'cores', { grid: [2, 2] }),
+        B('ecore', 'E-cores', 6, 0, 4.5, 4.2, '#f39a3d', 'cores', { grid: [3, 2] }),
+        B('npu', 'Neural Engine', 10.5, 0, 5.5, 4.2, '#b064e6', 'cores', { grid: [4, 4] }),
+        B('gpu', 'GPU · 10 cores', 0, 4.2, 9, 6, '#3f8fe8', 'cores', { grid: [5, 2], accel: true }),
+        B('slc', 'System cache', 9, 4.2, 7, 3, '#39b58a', 'cache'),
+        B('media', 'Media Engine', 9, 7.2, 3.5, 3, '#f2c230', 'logic', { demo: 'media' }),
+        B('display', 'Display', 12.5, 7.2, 3.5, 1.5, '#59c7d8', 'logic'),
+        B('secure', 'Secure Enclave', 12.5, 8.7, 3.5, 1.5, '#8c96a8', 'logic'),
+        B('tb', 'Thunderbolt / USB', 0, 10.2, 6, 2, '#6d7fa3', 'io'),
+        B('isp', 'Camera ISP', 6, 10.2, 5, 2, '#d97ab5', 'logic'),
+        B('ssdc', 'SSD controller', 11, 10.2, 5, 2, '#7aa36d', 'logic'),
+        B('memctl', 'Memory controllers', 0, 12.2, 16, 1.8, '#4c5a78', 'mem'),
+      ] },
+      { x: -8, z: 3.5, w: 7.6, d: 9, slab: false, blocks: [B('umem', 'Unified memory', 0, 0, 7.6, 9, '#15161a', 'chip', { h: 1.1, label: 'LPDDR5X' })] },
+      { x: 0.4, z: 3.5, w: 7.6, d: 9, slab: false, blocks: [B('umem', 'Unified memory', 0, 0, 7.6, 9, '#15161a', 'chip', { h: 1.1, label: 'LPDDR5X' })] },
+    ],
+    info: {
+      pcore: { kid: 'The 4 strongest brain parts. They do the hardest thinking really fast, like when a game starts.', adult: '4 high-performance CPU cores (Apple calls them its fastest ever) with a shared L2 cache. Wide out-of-order designs that run heavy, single-threaded work.' },
+      ecore: { kid: '6 helper brains that use very little energy. They do small jobs, so the battery lasts longer.', adult: '6 efficiency cores that handle background and light tasks at a fraction of the power. The OS scheduler decides which core type each thread runs on.' },
+      npu: { kid: 'A special brain just for AI, like recognising faces in photos or understanding your voice.', adult: 'A 16-core Neural Engine, a dedicated accelerator for the matrix maths in machine-learning models (on-device dictation, photo search and so on). It does this at far lower power than the CPU or GPU would.' },
+      gpu: { kid: 'The artist! 10 drawing cores, and each one now has its own little AI helper too.', adult: 'A 10-core GPU with a Neural Accelerator in every core (Apple quotes over 4× the peak AI compute of M4), a third-generation ray-tracing engine, and second-generation dynamic caching.' },
+      slc: { kid: 'A super-fast pocket where the chip keeps things it’s about to need, so it doesn’t have to walk all the way to memory.', adult: 'The System Level Cache (SLC) is shared by the CPU, GPU and other blocks. It cuts trips to DRAM, which saves both time and power.' },
+      media: { kid: 'A tiny video machine. It plays and records videos using hardly any energy, so the rest of the chip can rest.', adult: 'Fixed-function hardware for video: H.264, HEVC, ProRes and ProRes RAW encode/decode, plus AV1 decode. Dedicated circuits do these fixed maths steps many times more efficiently than general-purpose cores, which is why a laptop can play video for many hours.' },
+      display: { kid: 'Sends the finished pictures to the screen, many times every second.', adult: 'Display engines scan finished frames out to the internal panel and external displays, handling scaling, colour and refresh timing.' },
+      secure: { kid: 'A locked safe inside the chip that keeps your fingerprint and passwords secret.', adult: 'The Secure Enclave is an isolated subsystem with its own processor and encrypted memory. It holds Touch ID / Face ID data and encryption keys, and even the main OS can’t read them.' },
+      tb: { kid: 'The doors to the outside world, where cables plug in.', adult: 'Thunderbolt / USB 4 controllers for high-speed external ports: displays, storage and docks.' },
+      isp: { kid: 'Makes camera pictures look nice: brighter, sharper and less blurry.', adult: 'The image signal processor turns raw camera-sensor data into a clean image (demosaicing, noise reduction, tone mapping) in real time.' },
+      ssdc: { kid: 'The librarian for the storage. It knows where every file is kept.', adult: 'Apple puts the SSD controller inside the SoC, so the separate NAND chips on the board act as the drive. It handles wear levelling, error correction and encryption.' },
+      memctl: { kid: 'The loading dock where data comes in from the memory chips next door.', adult: 'LPDDR5X memory controllers. With unified memory, every block reads the same pool directly, so data doesn’t have to be copied between CPU and GPU memory. That is what gives 153 GB/s.' },
+      umem: { title: 'Unified memory', kid: 'Unified memory: ONE shared desk that the brain, the artist and the AI helper all use together.', adult: 'LPDDR5X DRAM packages sit on the same package as the SoC, very close to it. Short wires mean high bandwidth at low power. The trade-off is that you can’t upgrade it later.' },
+    },
+  },
+
+  desktop: {
+    name: 'Desktop CPU', emoji: '🧩', year: '2022', tagline: 'Built from “chiplets”, like LEGO bricks',
+    note: 'Layout in the style of AMD Ryzen 9 7950X (2 core chiplets + 1 I/O die). Sizes are approximate.',
+    stats: [['Cores', '16 (2 × 8)'], ['L3 cache', '64 MB'], ['Made with', '5 nm + 6 nm'], ['Memory', 'DDR5, 2 channels']],
+    kid: 'Instead of one big chip, this processor is made of three smaller chips working as a team, like LEGO bricks! Two bricks do the thinking, and one brick talks to everything else.',
+    adult: 'A chiplet design: two CCDs (core complex dies, 8 cores + 32 MB L3 each, on 5 nm) and one I/O die (6 nm) with the DDR5 memory controller, PCIe 5.0, USB, a small iGPU and a video engine. Small dies are cheaper to make, and the I/O parts don’t need the most expensive process. This package sits under the metal lid you install in Build mode.',
+    package: { w: 40, d: 40, color: '#1d5236' },
+    lid: { x: -17, z: -17, w: 34, d: 34, label: '16-CORE', sub: 'DESKTOP PROCESSOR' },
+    sources: [[22, -6], [22, 6]],
+    dies: [
+      { x: -14, z: -13, w: 10.6, d: 6.8, blocks: [
+        B('cores', 'Cores 1–4', 0, 0, 10.6, 2.6, '#e0584f', 'cores', { grid: [4, 1] }),
+        B('l3', 'L3 cache 32 MB', 0, 2.6, 10.6, 1.6, '#39b58a', 'cache'),
+        B('cores', 'Cores 5–8', 0, 4.2, 10.6, 2.6, '#e0584f', 'cores', { grid: [4, 1] }),
+      ] },
+      { x: -14, z: 6, w: 10.6, d: 6.8, blocks: [
+        B('cores', 'Cores 9–12', 0, 0, 10.6, 2.6, '#e0584f', 'cores', { grid: [4, 1] }),
+        B('l3', 'L3 cache 32 MB', 0, 2.6, 10.6, 1.6, '#39b58a', 'cache'),
+        B('cores', 'Cores 13–16', 0, 4.2, 10.6, 2.6, '#e0584f', 'cores', { grid: [4, 1] }),
+      ] },
+      { x: 2, z: -5, w: 12.4, d: 9.9, blocks: [
+        B('ddr', 'DDR5 memory controller', 0, 0, 12.4, 1.8, '#4c5a78', 'mem'),
+        B('igpu', 'Mini GPU', 0, 1.8, 5, 4, '#3f8fe8', 'cores', { grid: [2, 1] }),
+        B('media', 'Video engine', 5, 1.8, 3, 2, '#f2c230', 'logic', { demo: 'media' }),
+        B('display', 'Display', 8, 1.8, 4.4, 2, '#59c7d8', 'logic'),
+        B('usb', 'USB', 5, 3.8, 7.4, 2, '#6d7fa3', 'io'),
+        B('fabric', 'Infinity Fabric', 0, 5.8, 12.4, 2.3, '#8c96a8', 'logic'),
+        B('pcie', 'PCIe 5.0', 0, 8.1, 12.4, 1.8, '#7aa36d', 'io'),
+      ] },
+    ],
+    info: {
+      cores: { title: 'CPU cores (16)', kid: 'Each little square is one brain core. This chip has 16! They can all work on different jobs at the same time.', adult: 'Zen-style CPU cores, each with its own L1 and 1 MB L2 cache. With SMT, each core runs 2 threads, so 16 cores give 32 threads.' },
+      l3: { title: 'L3 cache', kid: 'A shared pocket for the 8 cores next to it, so they can grab things quickly.', adult: '32 MB of L3 cache per chiplet (64 MB in total), shared by the 8 cores on that die. Fetching from here takes around 10 ns, compared with around 70+ ns from DRAM.' },
+      ddr: { kid: 'The door to the RAM sticks. Data from the “desk” comes in here.', adult: 'A dual-channel DDR5 memory controller (each DIMM has 2 × 32-bit subchannels). It connects to the DIMM slots through the motherboard’s memory bus, the wiggly traces you saw in Explore.' },
+      igpu: { kid: 'A tiny artist so the computer can show a picture even without a graphics card.', adult: 'A small integrated GPU (2 compute units). It’s enough for the desktop and video, and it’s handy for troubleshooting when there’s no graphics card.' },
+      media: { kid: 'A tiny video machine that plays and records videos using hardly any energy.', adult: 'A hardware video block (AMD VCN) for encoding and decoding H.264 and HEVC, plus AV1 decode. It is fixed-function, so it uses far less power than doing the same work on the CPU cores.' },
+      display: { kid: 'Sends pictures out through the motherboard’s HDMI port.', adult: 'Display controllers for the motherboard’s video outputs, used when the iGPU is active.' },
+      usb: { kid: 'Where the USB ports connect to the chip.', adult: 'USB controllers built into the CPU, with more provided by the motherboard chipset.' },
+      fabric: { kid: 'The bridges that connect the three chips so they can talk.', adult: 'Infinity Fabric links join the I/O die to each CCD across the package substrate. Crossing between chiplets adds a little delay compared with staying on one die.' },
+      pcie: { kid: 'The road to the graphics card and the SSD.', adult: 'PCIe 5.0 lanes: x16 for the graphics card slot, x4 for an M.2 SSD, and x4 to the chipset.' },
+    },
+  },
+
+  gpu: {
+    name: 'Graphics chip', emoji: '🎨', year: '2022', tagline: 'Thousands of tiny artists at once',
+    note: 'Layout in the style of NVIDIA’s AD102 (RTX 4090 class): 12 processing clusters, 144 SMs on the full die. Simplified.',
+    stats: [['Shader cores', '16,384 (RTX 4090)'], ['Transistors', '76 billion'], ['Die size', '609 mm²'], ['Memory', '12 × GDDR6X chips']],
+    kid: 'A graphics chip is like a huge art class. Instead of a few really smart brains, it has THOUSANDS of simpler ones that each colour in a tiny bit of the picture at the same time.',
+    adult: 'A big GPU die splits work across GPCs (graphics processing clusters), each containing SMs (streaming multiprocessors) that hold the CUDA cores, tensor cores and RT cores. A large L2 cache sits in the middle, and a 384-bit memory bus feeds 12 GDDR6X chips on the card. Dedicated media engines (NVENC encoders and an NVDEC decoder) handle video.',
+    package: { w: 42, d: 42, color: '#1c4c34' },
+    lid: null,
+    sources: [[-30, -13], [-30, 13], [30, -13], [30, 13], [-13, -30], [13, -30], [-13, 30], [13, 30]],
+    dies: [
+      { x: -12.3, z: -12.35, w: 24.6, d: 24.7, blocks: [
+        B('mc', 'Memory controllers', 0, 0, 24.6, 1.5, '#4c5a78', 'mem'),
+        ...Array.from({ length: 12 }, (_, i) => B('gpc', `GPC ${i + 1}`, i < 6 ? 0 : 15.6, 1.5 + (i % 6) * 3.62, 9, 3.62, '#3f8fe8', 'cores', { grid: [6, 2] })),
+        B('l2', 'L2 cache', 9, 1.5, 6.6, 12, '#39b58a', 'cache'),
+        B('cmd', 'Command & scheduling', 9, 13.5, 6.6, 2.5, '#8c96a8', 'logic'),
+        B('media', 'Media engines', 9, 16, 6.6, 3.5, '#f2c230', 'logic', { demo: 'media' }),
+        B('display', 'Display', 9, 19.5, 6.6, 1.8, '#59c7d8', 'logic'),
+        B('pcie', 'PCIe interface', 9, 21.3, 6.6, 1.9, '#7aa36d', 'io'),
+        B('mc', 'Memory controllers', 0, 23.2, 24.6, 1.5, '#4c5a78', 'mem'),
+      ] },
+      ...[[-36, -19], [-36, -6], [-36, 7], [24, -19], [24, -6], [24, 7], [-19, -36], [-6, -36], [7, -36], [-19, 24], [-6, 24], [7, 24]].map(([x, z]) => (
+        { x, z, w: 12, d: 12, slab: false, blocks: [B('vram', 'Video memory', 0, 0, 12, 12, '#15161a', 'chip', { h: 1.2, label: 'GDDR6X' })] })),
+    ],
+    info: {
+      gpc: { title: 'Processing clusters (GPCs)', kid: 'Each blue block is a team of little artists. 12 teams × 12 groups × 128 painters = over 16,000 painters!', adult: 'Graphics Processing Cluster: 6 TPCs = 12 SMs each (144 SMs on the full die). Each SM has 128 CUDA cores, 4 tensor cores (for AI) and 1 RT core (for ray tracing).' },
+      l2: { kid: 'A big shared pocket in the middle so all the teams can share things quickly.', adult: 'The L2 cache (up to 96 MB on the full die, 72 MB on the RTX 4090). A large L2 cuts traffic to GDDR memory, which helps at high resolutions and with ray tracing.' },
+      cmd: { kid: 'The teacher who hands out jobs to all the art teams.', adult: 'The front end: the command processor, GigaThread scheduler and geometry work distribution. It turns the driver’s command stream into work spread across the GPCs.' },
+      media: { kid: 'The video machines. They let streamers record games without slowing the game down.', adult: 'NVENC encoders (2 on the RTX 4090, with AV1 support) and an NVDEC decoder. They are fixed-function, so recording or streaming barely touches the shader cores.' },
+      display: { kid: 'Sends the finished picture out through the HDMI and DisplayPort sockets.', adult: 'The display engine drives DisplayPort / HDMI outputs, including high-refresh and HDR modes.' },
+      pcie: { kid: 'The road back to the CPU through the motherboard slot.', adult: 'A PCIe 4.0 x16 host interface: about 32 GB/s each way to the CPU.' },
+      mc: { title: 'Memory controllers', kid: 'The loading docks for the video memory chips all around.', adult: '12 × 32-bit GDDR6X controllers = a 384-bit bus, about 1 TB/s of memory bandwidth. That is roughly 10× a desktop CPU’s dual-channel DDR5.' },
+      vram: { title: 'Video memory (GDDR6X)', kid: 'The artist’s own paint shelf: very fast memory just for pictures.', adult: 'GDDR6X chips (2 GB each, 24 GB in total). They use PAM4 signalling at ~21 Gbps per pin.' },
+    },
+  },
+
+  dimm: {
+    name: 'RAM stick (DDR5)', emoji: '📝', year: '2021', tagline: 'What’s under the heat spreader',
+    note: 'A 16 GB single-rank DDR5 DIMM, shown at ⅓ scale (the real stick is 133 mm long).',
+    stats: [['Pins', '288'], ['Chips', '8 × 2 GB'], ['Channels', '2 × 32-bit per stick'], ['Voltage', '1.1 V (PMIC on stick)']],
+    kid: 'Take the metal cover off a RAM stick and you find a row of black memory chips. Each one holds 2 GB, and together they make this 16 GB “desk”.',
+    adult: 'A DDR5 UDIMM. Unlike DDR4, each stick is split into two independent 32-bit subchannels (A and B) for better efficiency, and voltage regulation moved onto the module itself (the PMIC). The SPD hub stores the timings and XMP/EXPO profiles your BIOS reads, and it includes a temperature sensor.',
+    package: { w: 44.45, d: 10.4, color: '#1f5b3a', t: 0.45 },
+    lid: { x: -22.2, z: -5.2, w: 44.4, d: 9.2, h: 0.5, label: 'VELOCITY DDR5', sub: '6000 MT/s · 16 GB', color: '#3b3f46' },
+    sources: [[0, 5.6], [-10, 5.6], [10, 5.6]],
+    dies: [
+      ...[0, 1, 2, 3, 4, 5, 6, 7].map(i => ({ x: -20.5 + i * 5.1 + (i > 3 ? 1.2 : 0), z: -4, w: 3.6, d: 3.3, slab: false,
+        blocks: [B('dram', i < 4 ? 'Subchannel A' : 'Subchannel B', 0, 0, 3.6, 3.3, '#15161a', 'chip', { h: 0.4, label: '2 GB', tint: i < 4 ? '#e0584f' : '#3f8fe8' })] })),
+      { x: -1.2, z: 0.4, w: 2.4, d: 1.6, slab: false, blocks: [B('pmic', 'PMIC', 0, 0, 2.4, 1.6, '#15161a', 'chip', { h: 0.35, label: 'PMIC' })] },
+      { x: 17, z: 0.4, w: 1.6, d: 1.2, slab: false, blocks: [B('spd', 'SPD hub', 0, 0, 1.6, 1.2, '#15161a', 'chip', { h: 0.3, label: 'SPD' })] },
+      { x: -22.2, z: 4, w: 21.2, d: 1.2, slab: false, blocks: [B('pins', 'Gold contacts', 0, 0, 21.2, 1.2, '#d6a73c', 'gold', { h: 0.05 })] },
+      { x: -0.4, z: 4, w: 0.8, d: 1.2, slab: false, blocks: [B('notch', 'Key notch', 0, 0, 0.8, 1.2, '#0c0f16', 'logic', { h: 0.05, label: ' ' })] },
+      { x: 1, z: 4, w: 21.2, d: 1.2, slab: false, blocks: [B('pins', 'Gold contacts', 0, 0, 21.2, 1.2, '#d6a73c', 'gold', { h: 0.05 })] },
+    ],
+    info: {
+      dram: { title: 'DRAM chips', kid: 'The memory chips! Each black square holds 2 GB. The red ones and the blue ones work as two separate teams so they can do two jobs at once.', adult: 'Eight 16 Gb (2 GB) x8 DRAM chips. The four on the left form 32-bit subchannel A and the four on the right form subchannel B. Each subchannel takes its own commands, which keeps more of the memory busy. Open “Inside a memory chip” to look inside one.' },
+      pmic: { kid: 'A little power helper that gives the memory chips exactly the right amount of electricity.', adult: 'Power Management IC. DDR5 moved voltage regulation from the motherboard onto the DIMM, turning 5 V into the ~1.1 V the DRAM needs, right next to the chips. That makes the voltage cleaner.' },
+      spd: { kid: 'A tiny name tag that tells the computer how fast this RAM can go.', adult: 'The SPD hub (Serial Presence Detect) is an EEPROM holding the JEDEC timings and XMP/EXPO overclocking profiles, plus a temperature sensor. The BIOS reads it at boot. That is how “enable XMP” knows what to set.' },
+      pins: { title: 'Gold contacts', kid: 'The gold fingers that touch the motherboard slot. Gold doesn’t rust, so the connection stays good.', adult: '288 contacts (144 per side) carrying data, address/command, clocks and power. They are gold-plated for corrosion resistance and a reliable contact.' },
+      notch: { kid: 'This gap makes sure the stick can only go in one way. It even stops you putting old RAM in a new slot!', adult: 'The key notch is at a different position for DDR4 and DDR5, so you physically can’t insert the wrong generation or put a stick in backwards.' },
+    },
+  },
+
+  dram: {
+    name: 'Inside a memory chip', emoji: '🔬', year: 'today', tagline: 'Billions of tiny buckets of electricity',
+    note: 'A 16 Gb DDR5 DRAM die: 32 banks in 8 bank groups. Simplified.',
+    stats: [['Memory cells', '17 billion'], ['Banks', '32'], ['Rows per bank', '65,536'], ['Refresh', 'every 32 ms']],
+    kid: 'Inside each memory chip are about 17 billion tiny “buckets” that hold electricity. A full bucket means 1 and an empty one means 0. But the buckets leak! So the chip has to top them all up about 30 times every second.',
+    adult: 'Each bit is a 1T1C cell: one transistor and one capacitor. Cells are arranged in banks of rows × columns. A read “activates” a row, which copies it into sense amplifiers (the row buffer), then reads columns from that buffer. Because capacitors leak, every row has to be refreshed within 32 ms. DDR5 also adds on-die ECC to fix single-bit errors inside the chip.',
+    package: { w: 13, d: 13, color: '#16171b', t: 0.6 },
+    lid: { x: -6.4, z: -6.4, w: 12.8, d: 12.8, h: 0.8, label: '16Gb DDR5', sub: 'x8 · FBGA-78', color: '#15161a' },
+    sources: [[0, 9], [0, -9]],
+    dies: [
+      { x: -5.2, z: -5.4, w: 10.4, d: 10.8, blocks: [
+        ...Array.from({ length: 32 }, (_, i) => {
+          const side = i < 16 ? 0 : 1, k = i % 16, col = k % 2, row = Math.floor(k / 2), grp = side * 4 + Math.floor(row / 2);
+          return B('bank', `Bank group ${grp + 1}`, side * 6.4 + col * 2, row * 1.35, 2, 1.35, ['#3f8fe8', '#39b58a', '#b064e6', '#e0584f', '#f39a3d', '#59c7d8', '#d97ab5', '#7aa36d'][grp], 'bank');
+        }),
+        B('cmd', 'Commands', 4, 0, 2.4, 3.6, '#8c96a8', 'logic'),
+        B('ecc', 'On-die ECC', 4, 3.6, 2.4, 3.6, '#f2c230', 'logic'),
+        B('io', 'Data pins', 4, 7.2, 2.4, 3.6, '#4c5a78', 'io'),
+      ] },
+    ],
+    info: {
+      bank: { title: 'Memory banks', kid: 'Each coloured block is a “bank”: a big grid of tiny buckets arranged in rows and columns, like seats in a stadium.', adult: 'Each bank holds 512 Mb as 65,536 rows × 1,024 columns × 8 bits. The chip keeps 32 banks in 8 bank groups, so different banks can be opened at the same time, which hides the delay of opening a row.' },
+      cmd: { kid: 'The part that listens to orders: “open row 42!”, “read that!”, “refresh now!”.', adult: 'Command/address decoding, mode registers and the refresh counter. It receives ACTIVATE, READ, WRITE, PRECHARGE and REFRESH commands from the memory controller.' },
+      ecc: { kid: 'A spell-checker for memory. If one tiny bucket flips by mistake, it fixes it.', adult: 'DDR5 on-die ECC corrects single-bit errors inside the DRAM, which has become important as cells get smaller. It is separate from “ECC memory” (system-level ECC), which also protects data on the bus.' },
+      io: { kid: 'The door where data leaves the chip. 8 bits squeeze through at once, billions of times a second.', adult: 'The x8 data interface. DDR (double data rate) transfers on both clock edges, so at 6000 MT/s each pin moves 6 billion bits per second.' },
+    },
+  },
+};
+export const CHIP_ORDER = ['m5', 'desktop', 'gpu', 'dimm', 'dram'];

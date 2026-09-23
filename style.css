@@ -27,7 +27,7 @@ button:focus-visible { outline: 3px solid var(--cyan); outline-offset: 2px; }
 /* Mode visibility */
 [class*="only-"] { display: none; }
 body[data-mode="explore"] .only-explore, body[data-mode="build"] .only-build,
-body[data-mode="find"] .only-find, body[data-mode="museum"] .only-museum { display: block; }
+body[data-mode="find"] .only-find, body[data-mode="museum"] .only-museum, body[data-mode="chips"] .only-chips { display: block; }
 
 /* Top bar */
 .topbar { position: fixed; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 16px; padding: 12px 16px; z-index: 20; pointer-events: none; }
@@ -137,6 +137,38 @@ body[data-mode="build"] .card { top: 128px; }
 .timeline button.on { background: var(--accent); color: var(--accent-ink); }
 .calcBtn { position: fixed; left: 16px; top: 80px; padding: 12px 16px; border-radius: 14px; font-size: 16px; z-index: 10; }
 
+/* Chip Lab */
+.chipTabs { position: fixed; top: 80px; left: 16px; display: flex; flex-direction: column; gap: 4px; padding: 6px; border-radius: var(--r); z-index: 10; }
+.chipTabs button { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 12px; color: var(--muted); text-align: left; }
+.chipTabs button i { font-style: normal; font-size: 20px; }
+.chipTabs button.on { background: var(--accent); color: var(--accent-ink); }
+#chipCard { transform: none; }
+#chipCard .year { color: var(--accent); font: 700 15px var(--display); }
+#chipCard .tag-line { color: var(--accent); font: 600 16px var(--display); margin: 0 0 8px; }
+#chipCard .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
+#chipCard .stats div { padding: 10px 12px; border-radius: 12px; background: rgba(255, 255, 255, 0.06); }
+#chipCard .stats small { display: block; color: var(--muted); font-size: 12px; }
+#chipCard .stats b { font: 700 15px var(--display); }
+#chipCard .blocks { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
+#chipCard .blocks button { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.07); font-size: 13.5px; }
+#chipCard .blocks button:hover { background: rgba(255, 255, 255, 0.14); }
+.sw { width: 12px; height: 12px; border-radius: 4px; flex: none; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3); }
+#chipCard .note { color: var(--muted); font-size: 13px; }
+#chipCard .back { padding: 6px 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.08); margin-bottom: 10px; }
+#chipCard .bname { display: flex; align-items: center; gap: 10px; font: 700 20px var(--display); margin: 4px 0 8px; }
+#chipCard .bname .sw { width: 18px; height: 18px; }
+#chipCard .flow { font-size: 14px; padding: 10px 12px; border-radius: 12px; background: rgba(79, 227, 255, 0.08); }
+.demo { margin: 12px 0; padding: 14px; border-radius: 14px; background: rgba(242, 194, 48, 0.08); border: 1px solid rgba(242, 194, 48, 0.25); }
+.demo .primary { width: 100%; padding: 10px; font-size: 15px; margin-bottom: 12px; }
+.meter { margin: 8px 0; font-size: 14px; }
+.meter .bar { height: 14px; border-radius: 7px; background: rgba(255, 255, 255, 0.08); overflow: hidden; margin-top: 4px; }
+.meter .bar i { display: block; height: 100%; width: 0; border-radius: 7px; transition: width 1.4s cubic-bezier(.2, .9, .3, 1); }
+.meter.cpu .bar i { background: linear-gradient(90deg, #f39a3d, #e0584f); }
+.meter.me .bar i { background: linear-gradient(90deg, #4ade80, #39b58a); }
+.demo small { color: var(--muted); }
+.lidBtn { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 10; font-size: 18px; padding: 14px 26px; animation: glow 1.6s ease-in-out infinite; }
+.lidBtn:hover { transform: translateX(-50%) scale(1.03); }
+
 /* Modals */
 .modal { position: fixed; inset: 0; display: none; place-items: center; padding: 16px; background: rgba(4, 7, 12, 0.6); z-index: 40; }
 .modal.open { display: grid; }
@@ -199,6 +231,16 @@ body[data-mode="build"] .card { top: 128px; }
   #exhibit:not(.compact) .head::after { content: '▴ less'; }
   #exhibit.compact :is(.stats, .body, .fact, .scale) { display: none; }
   #exhibit .emoji { width: 48px; height: 48px; font-size: 28px; }
+  .chipTabs { top: auto; bottom: 16px; left: 16px; right: 16px; flex-direction: row; overflow-x: auto; }
+  .chipTabs button span { display: none; }
+  .chipTabs button { flex: 1; justify-content: center; }
+  #chipCard { top: auto; bottom: 88px; max-height: 44vh; padding: 14px 16px; }
+  #chipCard .head { cursor: pointer; margin-bottom: 6px; }
+  #chipCard .head::after { content: '▾ more'; margin-left: auto; color: var(--muted); font: 600 13px var(--display); white-space: nowrap; }
+  #chipCard:not(.compact) .head::after { content: '▴ less'; }
+  #chipCard.compact .content > :not(.keep) { display: none; }
+  #chipCard .emoji { width: 48px; height: 48px; font-size: 28px; }
+  .lidBtn { bottom: auto; top: 70px; font-size: 15px; padding: 10px 18px; }
   #mNext { right: 16px; }
   .nav { top: 38%; }
   .timeline { right: 16px; }

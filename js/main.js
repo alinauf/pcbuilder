@@ -9,7 +9,8 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 import { buildPC, buildSyringe, BOARD_ORIGIN } from './parts.js';
 import { buildMuseum } from './museum.js';
-import { PARTS, STEPS, TRAY, FIND, EXHIBITS, EXHIBIT_ORDER, FLOPPY_ITEMS, HEIGHTS } from './data.js';
+import { buildChipLab } from './chips.js';
+import { PARTS, STEPS, TRAY, FIND, EXHIBITS, EXHIBIT_ORDER, FLOPPY_ITEMS, HEIGHTS, CHIPS, CHIP_ORDER } from './data.js';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -312,13 +313,15 @@ function setMode(m) {
   document.body.dataset.mode = m;
   outline.selectedObjects = [];
   const isMuseum = m === 'museum';
-  renderPass.scene = outline.renderScene = isMuseum ? museum.scene : workshop;
+  renderPass.scene = outline.renderScene = sceneFor(m);
   controls.maxPolarAngle = Math.PI * 0.495;
   if (m === 'explore') enterExplore();
   if (m === 'build') enterBuild();
   if (m === 'find') enterFind();
   if (isMuseum) enterMuseum();
+  if (m === 'chips') enterChips();
 }
+const sceneFor = m => (m === 'museum' ? museum.scene : m === 'chips' ? chipLab.scene : workshop);
 
 // --- Explore ---
 function enterExplore() {
@@ -692,6 +695,103 @@ $('#exhibit .speak').onclick = () => { const ex = EXHIBITS[museum.items[exIndex]
 $('#mPrev').onclick = () => { sfx.click(); focusExhibit(exIndex - 1); };
 $('#mNext').onclick = () => { sfx.click(); focusExhibit(exIndex + 1); };
 
+// --- Chip Lab ---
+const chipLab = buildChipLab(envTex);
+let chipId = 'm5';
+const chipCard = $('#chipCard');
+chipCard.classList.toggle('compact', innerWidth <= 900);
+chipCard.querySelector('.head').onclick = () => { if (innerWidth <= 900) chipCard.classList.toggle('compact'); };
+// Camera for the current chip/block; on wide screens aim right of centre so the chip clears the side card.
+function chipCam() {
+  const v = chipLab.view(), k = Math.max(1, 0.9 / camera.aspect);
+  const shift = innerWidth > 900 ? V(v.dist * 0.16, 0, 0) : V(0, 0, v.dist * 0.3);
+  const target = v.target.clone().add(shift);
+  return { target, cam: target.clone().add(v.cam.clone().sub(v.target).multiplyScalar(k)) };
+}
+function chipView(dur = 1.1) { const c = chipCam(); return fly(c.target, c.cam, dur); }
+function enterChips() {
+  $('#chipTabs').innerHTML = CHIP_ORDER.map(id => `<button data-id="${id}"><i>${CHIPS[id].emoji}</i><span>${esc(CHIPS[id].name)}</span></button>`).join('');
+  $$('#chipTabs button').forEach(b => (b.onclick = () => { sfx.click(); showChip(b.dataset.id); }));
+  showChip(chipId, true);
+}
+function showChip(id, instant) {
+  chipId = id;
+  chipLab.show(id);
+  outline.selectedObjects = [];
+  $$('#chipTabs button').forEach(b => b.classList.toggle('on', b.dataset.id === id));
+  renderChipCard();
+  if (instant) { const c = chipCam(); controls.target.copy(c.target); camera.position.copy(c.cam); }
+  else chipView();
+}
+function chipBlocks(c) {
+  const seen = new Map();
+  for (const die of c.dies) for (const b of die.blocks) if (!seen.has(b.id)) seen.set(b.id, { id: b.id, name: c.info[b.id]?.title || b.name, color: b.pattern === 'chip' ? b.tint || '#2a2c31' : b.color });
+  return [...seen.values()];
+}
+function renderChipCard() {
+  const c = CHIPS[chipId], st = chipLab.state, sel = st.sel;
+  chipCard.querySelector('.emoji').textContent = c.emoji;
+  chipCard.querySelector('.year').textContent = c.year;
+  chipCard.querySelector('h2').textContent = c.name;
+  const lidBtn = $('#lidBtn');
+  lidBtn.hidden = !c.lid;
+  lidBtn.textContent = st.open ? (chipId === 'dimm' ? '🔒 Put the cover back' : '🔒 Put the lid back') : chipId === 'dimm' ? '🔓 Take off the heat spreader' : '🔓 Open it up!';
+  lidBtn.classList.toggle('on', st.open);
+  const content = chipCard.querySelector('.content');
+  if (!sel) {
+    content.innerHTML = `<p class="tag-line keep">${esc(c.tagline)}</p>
+      <div class="stats">${c.stats.map(([k, v]) => `<div><small>${esc(k)}</small><b>${esc(v)}</b></div>`).join('')}</div>
+      <p class="body">${esc(level === 'kid' ? c.kid : c.adult)}</p>
+      <p><b>${level === 'kid' ? '👆 Tap a coloured block to find out what it does:' : 'Blocks on this chip:'}</b></p>
+      <div class="blocks keep">${chipBlocks(c).map(b => `<button data-b="${b.id}"><span class="sw" style="background:${b.color}"></span>${esc(b.name)}</button>`).join('')}</div>
+      <p class="note">ℹ️ ${esc(c.note)}</p>
+      <button class="speak">🔊 Read it to me</button>`;
+    content.querySelectorAll('.blocks button').forEach(b => (b.onclick = () => selectBlock(b.dataset.b)));
+    content.querySelector('.speak').onclick = () => say(`${c.name}. ${level === 'kid' ? c.kid : c.adult}`);
+    return;
+  }
+  const info = c.info[sel], blk = chipBlocks(c).find(b => b.id === sel);
+  content.innerHTML = `<button class="back keep">← The whole chip</button>
+    <div class="bname keep"><span class="sw" style="background:${blk.color}"></span>${esc(blk.name)}</div>
+    <p class="body">${esc(level === 'kid' ? info.kid : info.adult)}</p>
+    ${c.dies.some(d => d.blocks.some(b => b.id === sel && b.demo === 'media')) ? `<div class="demo">
+      <button class="primary" id="mediaDemo">▶ Play a 4K video</button>
+      <div class="meter cpu"><span>🧠 If the CPU cores did it: <b class="lbl"></b></span><div class="bar"><i></i></div></div>
+      <div class="meter me"><span>🎬 With the media engine: <b class="lbl"></b></span><div class="bar"><i></i></div></div>
+      <small>${level === 'kid' ? 'Special video circuits are like a juicer made just for oranges: much faster and easier than squeezing by hand!' : 'Illustrative, not measured: fixed-function decode typically uses a small fraction of the power of software decode on CPU cores.'}</small>
+    </div>` : ''}
+    ${c.spec?.sources || c.sources ? `<p class="flow">✨ ${level === 'kid' ? 'The glowing dots are data flying in from memory!' : 'Particles show data arriving from memory.'}</p>` : ''}
+    <button class="speak">🔊 Read it to me</button>`;
+  content.querySelector('.back').onclick = () => selectBlock(null);
+  content.querySelector('.speak').onclick = () => say(`${blk.name}. ${level === 'kid' ? info.kid : info.adult}`);
+  const demo = content.querySelector('#mediaDemo');
+  if (demo) demo.onclick = () => {
+    sfx.pop();
+    const [cpu, me] = content.querySelectorAll('.meter');
+    cpu.querySelector('i').style.width = '92%'; me.querySelector('i').style.width = '9%';
+    cpu.querySelector('.lbl').textContent = level === 'kid' ? '🔥 hot & busy!' : 'high power, cores busy';
+    me.querySelector('.lbl').textContent = level === 'kid' ? '❄️ cool & easy' : 'low power, cores free';
+    demo.textContent = '✅ Playing smoothly';
+  };
+}
+function selectBlock(id) {
+  if (id && !chipLab.state.open) { chipLab.setOpen(true); whoosh(0.6); }
+  chipLab.select(id);
+  sfx.click();
+  outline.selectedObjects = id ? chipLab.selTiles() : [];
+  if (innerWidth <= 900 && id) chipCard.classList.remove('compact');
+  renderChipCard();
+  chipView(0.9);
+}
+$('#lidBtn').onclick = () => {
+  const open = !chipLab.state.open;
+  chipLab.setOpen(open);
+  if (!open) { outline.selectedObjects = []; }
+  open ? whoosh(0.8) : sfx.snap();
+  renderChipCard();
+  chipView(1.2);
+};
+
 // Floppy calculator
 const FLOPPY = 1474560, FLOPPY_MM = 3.3;
 function renderCalc(i) {
@@ -739,6 +839,11 @@ function onClick(e) {
     }
     const targets = [build.ghost, build.hover, build.active === 'motherboard' && pc.mobo].filter(Boolean);
     if (targets.length && hits(e, targets).length) place();
+  } else if (mode === 'chips') {
+    const h = hits(e, chipLab.tiles())[0];
+    if (!h) return;
+    let o = h.object; while (o && o.userData.block === undefined) o = o.parent;
+    if (o) selectBlock(o.userData.block === chipLab.state.sel ? null : o.userData.block);
   } else if (mode === 'museum') {
     const h = hits(e, museum.items.map(i => i.holder))[0];
     if (!h) return;
@@ -750,6 +855,14 @@ function onClick(e) {
 let hoverId = null;
 const tip = $('#tooltip');
 canvas.addEventListener('pointermove', e => {
+  if (mode === 'chips') {
+    const h = hits(e, chipLab.tiles())[0];
+    let o = h?.object; while (o && o.userData.block === undefined) o = o.parent;
+    canvas.style.cursor = o ? 'pointer' : '';
+    if (o) { tip.textContent = CHIPS[chipId].info[o.userData.block]?.title || o.userData.name; tip.style.transform = `translate(${e.clientX + 14}px, ${e.clientY + 14}px)`; tip.className = 'show'; }
+    else tip.className = '';
+    return;
+  }
   if (mode !== 'explore' && mode !== 'find') { tip.className = ''; return; }
   const id = pickPart(e);
   if (id !== hoverId) {
@@ -782,6 +895,7 @@ function setLevel(l) {
   if (mode === 'build' && !build.busy) { build.active ? pickCardText() : showTask(); }
   if (mode === 'find' && find.i < find.list.length) askFind();
   if (mode === 'museum') focusExhibit(exIndex, true);
+  if (mode === 'chips') renderChipCard();
 }
 function pickCardText() { const s = STEPS[build.step]; $('#task').textContent = level === 'kid' ? s.kidTask : s.title; $('#how').textContent = level === 'kid' ? s.kidHow : s.how; }
 $$('.level button').forEach(b => (b.onclick = () => { sfx.click(); setLevel(b.dataset.level); }));
@@ -832,6 +946,7 @@ function tick(dt = Math.min(clock.getDelta(), 0.05)) {
   const t = clock.elapsedTime;
   runTweens(dt);
   if (mode === 'museum') museum.update(dt, t, exIndex);
+  else if (mode === 'chips') chipLab.update(dt, t);
   else {
     updatePower(dt, t);
     if (build.hover && !build.busy) build.hover.position.copy(build.hoverBase).addScaledVector(build.hoverAxis, Math.sin(t * 2.5) * 0.5);
@@ -839,7 +954,7 @@ function tick(dt = Math.min(clock.getDelta(), 0.05)) {
   }
   controls.update();
   composer.render();
-  labels.render(mode === 'museum' ? museum.scene : workshop, camera);
+  labels.render(sceneFor(mode), camera);
 }
 function loop() { tick(); requestAnimationFrame(loop); }
 
@@ -848,7 +963,7 @@ resetPC(false);
 try { thumbs = makeThumbs(); } catch (err) { console.warn('thumbnails skipped', err); }
 setLevel(level);
 const startMode = new URLSearchParams(location.search).get('mode') || store.get('mode') || 'explore';
-setMode(['explore', 'build', 'find', 'museum'].includes(startMode) ? startMode : 'explore');
-window.pcLab = { camera, controls, P, pc, museum, setMode, fly, V, tick }; // handy for poking around in the console
+setMode(['explore', 'build', 'find', 'chips', 'museum'].includes(startMode) ? startMode : 'explore');
+window.pcLab = { camera, controls, P, pc, museum, chipLab, setMode, fly, V, tick }; // handy for poking around in the console
 loop();
 $('#loading').classList.add('gone');

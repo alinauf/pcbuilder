@@ -31,6 +31,7 @@
       <button data-mode="explore"><i>🔍</i><span>Explore</span></button>
       <button data-mode="build"><i>🔧</i><span>Build</span></button>
       <button data-mode="find"><i>🎯</i><span>Find It</span></button>
+      <button data-mode="chips"><i>🔬</i><span>Chip Lab</span></button>
       <button data-mode="museum"><i>🏛️</i><span>Museum</span></button>
     </nav>
     <div class="prefs">
@@ -103,6 +104,16 @@
     <button id="mNext" class="nav glass" aria-label="Next exhibit">›</button>
     <div id="timeline" class="timeline glass"></div>
     <button id="calcBtn" class="calcBtn glass">💾 How many floppies?</button>
+  </div>
+
+  <!-- Chip Lab -->
+  <div id="chipUI" class="only-chips">
+    <div id="chipTabs" class="chipTabs glass"></div>
+    <aside id="chipCard" class="card glass open">
+      <div class="head"><div class="emoji"></div><div><div class="year"></div><h2></h2></div></div>
+      <div class="content"></div>
+    </aside>
+    <button id="lidBtn" class="lidBtn primary">🔓 Open it up!</button>
   </div>
 
   <div id="calc" class="modal">
