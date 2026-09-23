@@ -660,7 +660,7 @@ function focusExhibit(i, instant) {
   museum.items.forEach(m => { if (m !== it && m.playing) { m.playing = false; m.ex.play(false); } });
   // On wide screens the info card covers the right side, so aim a little right of the exhibit to shift it left.
   const t = it.focus.clone().add(V(innerWidth > 900 ? it.size * 0.45 : 0, innerWidth > 900 ? 0 : -it.size * 0.25, 0));
-  const cam = t.clone().add(V(4, 6, 24 + it.size * 1.25));
+  const cam = t.clone().add(V(4, 6, (24 + it.size * 1.25) * Math.max(1, 0.9 / camera.aspect)));
   if (instant) { controls.target.copy(t); camera.position.copy(cam); } else fly(t, cam, 1.2);
   const card = $('#exhibit');
   card.querySelector('.emoji').textContent = ex.emoji;
@@ -683,6 +683,10 @@ function togglePlay() {
   if (it.playing && it.id === 'hdd') whoosh(1.5);
 }
 $('#exhibit .play').onclick = togglePlay;
+// On phones the card starts folded so the exhibit stays visible; tap its header to unfold.
+const exCard = $('#exhibit');
+exCard.classList.toggle('compact', innerWidth <= 900);
+exCard.querySelector('.head').onclick = () => exCard.classList.toggle('compact');
 $('#exhibit .speak').onclick = () => { const ex = EXHIBITS[museum.items[exIndex].id]; say(`${ex.name}. ${level === 'kid' ? ex.kid : ex.adult} ${ex.fact}`); };
 $('#mPrev').onclick = () => { sfx.click(); focusExhibit(exIndex - 1); };
 $('#mNext').onclick = () => { sfx.click(); focusExhibit(exIndex + 1); };

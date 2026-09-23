@@ -193,7 +193,12 @@ body[data-mode="build"] .card { top: 128px; }
   .hint { display: none; }
   .bubble { top: 118px; }
   body[data-mode="build"] .card { display: none; }
-  #exhibit { top: auto; bottom: 108px; max-height: 42vh; }
+  #exhibit { top: auto; bottom: 108px; max-height: 50vh; padding: 14px 16px; }
+  #exhibit .head { cursor: pointer; margin-bottom: 10px; }
+  #exhibit .head::after { content: '▾ more'; margin-left: auto; color: var(--muted); font: 600 13px var(--display); white-space: nowrap; }
+  #exhibit:not(.compact) .head::after { content: '▴ less'; }
+  #exhibit.compact :is(.stats, .body, .fact, .scale) { display: none; }
+  #exhibit .emoji { width: 48px; height: 48px; font-size: 28px; }
   #mNext { right: 16px; }
   .nav { top: 38%; }
   .timeline { right: 16px; }
