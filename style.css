@@ -27,7 +27,7 @@ button:focus-visible { outline: 3px solid var(--cyan); outline-offset: 2px; }
 /* Mode visibility */
 [class*="only-"] { display: none; }
 body[data-mode="explore"] .only-explore, body[data-mode="build"] .only-build,
-body[data-mode="find"] .only-find, body[data-mode="museum"] .only-museum, body[data-mode="chips"] .only-chips, body[data-mode="fix"] .only-fix { display: block; }
+body[data-mode="find"] .only-find, body[data-mode="museum"] .only-museum, body[data-mode="chips"] .only-chips, body[data-mode="fix"] .only-fix, body[data-mode="teardown"] .only-teardown { display: block; }
 
 /* Top bar */
 .topbar { position: fixed; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 16px; padding: 12px 16px; z-index: 20; pointer-events: none; }
@@ -146,22 +146,22 @@ body[data-mode="build"] .card { top: 128px; }
 .chipTabs button { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 12px; color: var(--muted); text-align: left; }
 .chipTabs button i { font-style: normal; font-size: 20px; }
 .chipTabs button.on { background: var(--accent); color: var(--accent-ink); }
-#chipCard { transform: none; }
-#chipCard .year { color: var(--accent); font: 700 15px var(--display); }
-#chipCard .tag-line { color: var(--accent); font: 600 16px var(--display); margin: 0 0 8px; }
-#chipCard .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
-#chipCard .stats div { padding: 10px 12px; border-radius: 12px; background: rgba(255, 255, 255, 0.06); }
-#chipCard .stats small { display: block; color: var(--muted); font-size: 12px; }
-#chipCard .stats b { font: 700 15px var(--display); }
-#chipCard .blocks { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
-#chipCard .blocks button { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.07); font-size: 13.5px; }
-#chipCard .blocks button:hover { background: rgba(255, 255, 255, 0.14); }
+:is(#chipCard, #tdCard) { transform: none; }
+:is(#chipCard, #tdCard) .year { color: var(--accent); font: 700 15px var(--display); }
+:is(#chipCard, #tdCard) .tag-line { color: var(--accent); font: 600 16px var(--display); margin: 0 0 8px; }
+:is(#chipCard, #tdCard) .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
+:is(#chipCard, #tdCard) .stats div { padding: 10px 12px; border-radius: 12px; background: rgba(255, 255, 255, 0.06); }
+:is(#chipCard, #tdCard) .stats small { display: block; color: var(--muted); font-size: 12px; }
+:is(#chipCard, #tdCard) .stats b { font: 700 15px var(--display); }
+:is(#chipCard, #tdCard) .blocks { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
+:is(#chipCard, #tdCard) .blocks button { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.07); font-size: 13.5px; }
+:is(#chipCard, #tdCard) .blocks button:hover { background: rgba(255, 255, 255, 0.14); }
 .sw { width: 12px; height: 12px; border-radius: 4px; flex: none; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3); }
-#chipCard .note { color: var(--muted); font-size: 13px; }
-#chipCard .back { padding: 6px 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.08); margin-bottom: 10px; }
-#chipCard .bname { display: flex; align-items: center; gap: 10px; font: 700 20px var(--display); margin: 4px 0 8px; }
-#chipCard .bname .sw { width: 18px; height: 18px; }
-#chipCard .flow { font-size: 14px; padding: 10px 12px; border-radius: 12px; background: rgba(79, 227, 255, 0.08); }
+:is(#chipCard, #tdCard) .note { color: var(--muted); font-size: 13px; }
+:is(#chipCard, #tdCard) .back { padding: 6px 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.08); margin-bottom: 10px; }
+:is(#chipCard, #tdCard) .bname { display: flex; align-items: center; gap: 10px; font: 700 20px var(--display); margin: 4px 0 8px; }
+:is(#chipCard, #tdCard) .bname .sw { width: 18px; height: 18px; }
+:is(#chipCard, #tdCard) .flow { font-size: 14px; padding: 10px 12px; border-radius: 12px; background: rgba(79, 227, 255, 0.08); }
 .demo { margin: 12px 0; padding: 14px; border-radius: 14px; background: rgba(242, 194, 48, 0.08); border: 1px solid rgba(242, 194, 48, 0.25); }
 .demo .primary { width: 100%; padding: 10px; font-size: 15px; margin-bottom: 12px; }
 .meter { margin: 8px 0; font-size: 14px; }
@@ -278,6 +278,9 @@ body.journeying #exploreUI .toolbar, body.journeying #exploreUI .hint { opacity:
 .confetti { position: fixed; top: -20px; width: 9px; height: 15px; border-radius: 2px; z-index: 60; pointer-events: none; animation: fall 3.2s ease-in forwards; }
 @keyframes fall { to { transform: translate(var(--dx), 110vh) rotate(900deg); } }
 
+@media (max-width: 1320px) { .brand div { display: none; } .modes button { padding: 9px 12px; } }
+@media (max-width: 1100px) { .modes span { display: none; } .modes button { font-size: 19px; } }
+
 /* Small screens */
 @media (max-width: 900px) {
   .brand div, .modes span { display: none; }
@@ -299,12 +302,12 @@ body.journeying #exploreUI .toolbar, body.journeying #exploreUI .hint { opacity:
   .chipTabs { top: auto; bottom: 16px; left: 16px; right: 16px; flex-direction: row; overflow-x: auto; }
   .chipTabs button span { display: none; }
   .chipTabs button { flex: 1; justify-content: center; }
-  #chipCard { top: auto; bottom: 88px; max-height: 44vh; padding: 14px 16px; }
-  #chipCard .head { cursor: pointer; margin-bottom: 6px; }
-  #chipCard .head::after { content: '▾ more'; margin-left: auto; color: var(--muted); font: 600 13px var(--display); white-space: nowrap; }
-  #chipCard:not(.compact) .head::after { content: '▴ less'; }
-  #chipCard.compact .content > :not(.keep) { display: none; }
-  #chipCard .emoji { width: 48px; height: 48px; font-size: 28px; }
+  :is(#chipCard, #tdCard) { top: auto; bottom: 88px; max-height: 44vh; padding: 14px 16px; }
+  :is(#chipCard, #tdCard) .head { cursor: pointer; margin-bottom: 6px; }
+  :is(#chipCard, #tdCard) .head::after { content: '▾ more'; margin-left: auto; color: var(--muted); font: 600 13px var(--display); white-space: nowrap; }
+  :is(#chipCard, #tdCard):not(.compact) .head::after { content: '▴ less'; }
+  :is(#chipCard, #tdCard).compact .content > :not(.keep) { display: none; }
+  :is(#chipCard, #tdCard) .emoji { width: 48px; height: 48px; font-size: 28px; }
   .lidBtn { bottom: auto; top: 70px; font-size: 15px; padding: 10px 18px; }
   #mNext { right: 16px; }
   .nav { top: 38%; }

@@ -262,6 +262,21 @@ export function decal(w, h, tex, right, up, x = 0, y = 0, z = 0, opts = {}) {
   return m;
 }
 
+// Flat rounded-rectangle slab (phones, laptops): w along x, d along z, thickness t along y, bottom at y=0.
+export function roundedSlab(w, d, r, t, hole) {
+  const path = (P, w, d, r) => {
+    const x = -w / 2, y = -d / 2;
+    P.moveTo(x + r, y); P.lineTo(x + w - r, y); P.quadraticCurveTo(x + w, y, x + w, y + r); P.lineTo(x + w, y + d - r);
+    P.quadraticCurveTo(x + w, y + d, x + w - r, y + d); P.lineTo(x + r, y + d); P.quadraticCurveTo(x, y + d, x, y + d - r); P.lineTo(x, y + r); P.quadraticCurveTo(x, y, x + r, y);
+    return P;
+  };
+  const s = path(new THREE.Shape(), w, d, r);
+  if (hole) s.holes.push(path(new THREE.Path(), ...hole));
+  const g = new THREE.ExtrudeGeometry(s, { depth: t, bevelEnabled: false, curveSegments: 12 });
+  g.rotateX(-Math.PI / 2); // shape y -> -z, extrusion -> +y
+  return g;
+}
+
 // Phillips screw head facing +Z.
 export function screw(r = 0.32, mat = M.steel) {
   const g = new THREE.Group();

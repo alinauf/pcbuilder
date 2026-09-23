@@ -665,7 +665,7 @@ export function buildSyringe() {
 
 // ---------- Monitor + keyboard (peripherals) ----------
 const SCREEN_W = 1280, SCREEN_H = 720;
-function drawScreen(c, state, typed = '') {
+export function drawScreen(c, state, typed = '') {
   const W = SCREEN_W, H = SCREEN_H;
   c.fillStyle = '#000'; c.fillRect(0, 0, W, H);
   if (state === 'off') return;

@@ -12,7 +12,8 @@ import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer
 import { buildPC, buildSyringe, BOARD_ORIGIN } from './parts.js';
 import { buildMuseum } from './museum.js';
 import { buildChipLab } from './chips.js';
-import { PARTS, STEPS, TRAY, FIND, EXHIBITS, EXHIBIT_ORDER, FLOPPY_ITEMS, HEIGHTS, CHIPS, CHIP_ORDER } from './data.js';
+import { buildTeardown } from './teardown.js';
+import { PARTS, STEPS, TRAY, FIND, EXHIBITS, EXHIBIT_ORDER, FLOPPY_ITEMS, HEIGHTS, CHIPS, CHIP_ORDER, TEARDOWN } from './data.js';
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -297,8 +298,12 @@ info.querySelector('.speak').onclick = () => { const d = PARTS[infoId]; if (d) s
 let mode = null;
 const views = {
   overview: () => fly(V(0, 20, 0), fit(V(0, 20, 0), V(62, 48, 92))),
-  // Aim a little higher so the PC sits below the question card
-  find: () => fly(V(2, 30, 0), fit(V(2, 30, 0), V(55, 44, 98))),
+  find: () => {
+    // Pull back in proportion to the space the question card takes
+    const cb = $('.bubble.find')?.getBoundingClientRect().bottom || 0, k = innerHeight / Math.max(200, innerHeight - cb);
+    const t = V(2, 22, 0);
+    return fly(t, fit(t, t.clone().add(V(53, 24, 98).multiplyScalar(k))));
+  },
   build: () => fly(V(-28, 8, 6), fit(V(-28, 8, 6), V(-8, 70, 120))),
 };
 function setMode(m) {
@@ -321,8 +326,10 @@ function setMode(m) {
   if (isMuseum) enterMuseum();
   if (m === 'chips') enterChips();
   if (m === 'fix') enterFix();
+  if (m === 'teardown') enterTeardown();
+  applyViewOffset();
 }
-const sceneFor = m => (m === 'museum' ? museum.scene : m === 'chips' ? chipLab.scene : workshop);
+const sceneFor = m => (m === 'museum' ? museum.scene : m === 'chips' ? chipLab.scene : m === 'teardown' ? teardown.scene : workshop);
 
 // --- Explore ---
 function enterExplore() {
@@ -624,12 +631,22 @@ function enterFind() {
   views.find();
   askFind();
 }
+// In Find It the question card sits over the top of the screen, so render the 3D view
+// shifted down by the card's height: the PC stays centred in the space below it.
+function applyViewOffset() {
+  const card = $('.bubble.find');
+  if (mode === 'find' && card) {
+    const cb = card.getBoundingClientRect().bottom;
+    camera.setViewOffset(innerWidth, innerHeight + cb, 0, 0, innerWidth, innerHeight);
+  } else camera.clearViewOffset();
+}
 function askFind() {
   const q = find.list[find.i];
   $('#findQ').textContent = level === 'kid' ? q.kid : q.adult;
   $('#findFb').textContent = level === 'kid' ? 'Tap the part in the computer! You can spin it around.' : 'Click the part in the 3D model.';
   $('#findScore').innerHTML = find.list.map((_, i) => `<span class="${i < find.i ? 'done' : i === find.i ? 'now' : ''}">${i < find.i ? '⭐' : ''}</span>`).join('');
   if (level === 'kid') say(q.kid);
+  requestAnimationFrame(applyViewOffset);
 }
 function answerFind(id) {
   if (find.lock || !id) return;
@@ -803,6 +820,71 @@ $('#lidBtn').onclick = () => {
   chipView(1.2);
 };
 
+// --- Teardown: laptop & phone ---
+const teardown = buildTeardown(envTex);
+let tdId = 'laptop';
+const tdCard = $('#tdCard');
+tdCard.classList.toggle('compact', innerWidth <= 900);
+tdCard.querySelector('.head').onclick = () => { if (innerWidth <= 900) tdCard.classList.toggle('compact'); };
+function tdView(dur = 1.1) {
+  const v = teardown.view(), shift = innerWidth > 900 ? V(v.cam.distanceTo(v.target) * 0.16, 0, 0) : V(0, 0, v.cam.distanceTo(v.target) * 0.25);
+  const t = v.target.clone().add(shift);
+  return fly(t, fit(t, t.clone().add(v.cam.clone().sub(v.target))), dur);
+}
+function enterTeardown() {
+  $('#tdTabs').innerHTML = Object.entries(TEARDOWN).map(([id, d]) => `<button data-id="${id}"><i>${d.emoji}</i><span>${esc(d.name)}</span></button>`).join('');
+  $$('#tdTabs button').forEach(b => (b.onclick = () => { sfx.click(); showDevice(b.dataset.id); }));
+  showDevice(tdId);
+}
+function showDevice(id) {
+  tdId = id; teardown.show(id); outline.selectedObjects = [];
+  $$('#tdTabs button').forEach(b => b.classList.toggle('on', b.dataset.id === id));
+  renderTdCard(); tdView();
+}
+function renderTdCard() {
+  const d = TEARDOWN[tdId], sel = teardown.state.sel, kid = level === 'kid';
+  tdCard.querySelector('.emoji').textContent = d.emoji;
+  tdCard.querySelector('.year').textContent = kid ? 'Take it apart!' : 'Teardown';
+  tdCard.querySelector('h2').textContent = d.name;
+  $('#tdBtn').textContent = teardown.state.open ? '🔩 Put it back together' : '🔧 Take it apart';
+  $('#tdBtn').classList.toggle('on', teardown.state.open);
+  const c = tdCard.querySelector('.content');
+  if (!sel) {
+    c.innerHTML = `<p class="tag-line keep">${esc(d.tagline)}</p>
+      <div class="stats">${d.stats.map(([k, v]) => `<div><small>${esc(k)}</small><b>${esc(v)}</b></div>`).join('')}</div>
+      <p class="body">${esc(kid ? d.kid : d.adult)}</p>
+      <p><b>${kid ? '👆 Tap a part to find out what it does:' : 'Parts:'}</b></p>
+      <div class="blocks keep">${Object.entries(d.parts).map(([id, p]) => `<button data-p="${id}">${p.emoji} ${esc(p.name)}</button>`).join('')}</div>
+      <button class="speak">🔊 Read it to me</button>`;
+    c.querySelectorAll('.blocks button').forEach(b => (b.onclick = () => selectTdPart(b.dataset.p)));
+    c.querySelector('.speak').onclick = () => say(`${d.name}. ${kid ? d.kid : d.adult}`);
+    return;
+  }
+  const p = d.parts[sel];
+  c.innerHTML = `<button class="back keep">← The whole ${esc(d.name.toLowerCase())}</button>
+    <div class="bname keep">${p.emoji} ${esc(p.name)}</div>
+    <p class="body">${esc(kid ? p.kid : p.adult)}</p>
+    <p class="flow">🖥️ <b>${kid ? 'In the big computer you built:' : 'In a desktop PC:'}</b> ${esc(p.desktop)}</p>
+    <button class="speak">🔊 Read it to me</button>`;
+  c.querySelector('.back').onclick = () => selectTdPart(null);
+  c.querySelector('.speak').onclick = () => say(`${p.name}. ${kid ? p.kid : p.adult} ${kid ? 'In the big computer:' : 'In a desktop:'} ${p.desktop}`);
+}
+function selectTdPart(id) {
+  if (id && !teardown.state.open) { teardown.setOpen(true); click(1400, 0.02, 0.3); tdView(1.2); }
+  teardown.select(id); sfx.click();
+  outline.selectedObjects = id ? teardown.partGroups(id) : [];
+  if (id) { profiles.track('teardown', `${tdId}:${id}`, 10, 'teardown'); if (innerWidth <= 900) tdCard.classList.remove('compact'); }
+  renderTdCard();
+}
+$('#tdBtn').onclick = () => {
+  const open = !teardown.state.open;
+  teardown.setOpen(open);
+  if (!open) { teardown.select(null); outline.selectedObjects = []; }
+  // screwdriver clicks, then parts lifting out
+  for (let i = 0; i < 6; i++) click(1600 + i * 60, 0.02, 0.25, i * 0.09);
+  renderTdCard(); tdView(1.2);
+};
+
 // Floppy calculator
 const FLOPPY = 1474560, FLOPPY_MM = 3.3;
 function renderCalc(i) {
@@ -852,6 +934,10 @@ function onClick(e) {
     }
     const targets = [build.ghost, build.hover, build.active === 'motherboard' && pc.mobo].filter(Boolean);
     if (targets.length && hits(e, targets).length) place();
+  } else if (mode === 'teardown') {
+    const h = hits(e, teardown.pickables())[0];
+    let o = h?.object; while (o && !o.userData.tdPart) o = o.parent;
+    if (o) selectTdPart(o.userData.tdPart === teardown.state.sel ? null : o.userData.tdPart);
   } else if (mode === 'chips') {
     const h = hits(e, chipLab.tiles())[0];
     if (!h) return;
@@ -868,6 +954,13 @@ function onClick(e) {
 let hoverId = null;
 const tip = $('#tooltip');
 canvas.addEventListener('pointermove', e => {
+  if (mode === 'teardown') {
+    let o = hits(e, teardown.pickables())[0]?.object; while (o && !o.userData.tdPart) o = o.parent;
+    canvas.style.cursor = o ? 'pointer' : '';
+    if (o) { const p = TEARDOWN[tdId].parts[o.userData.tdPart]; tip.textContent = `${p.emoji} ${p.name}`; tip.style.transform = `translate(${e.clientX + 14}px, ${e.clientY + 14}px)`; tip.className = 'show'; }
+    else tip.className = '';
+    return;
+  }
   if (mode === 'chips') {
     const h = hits(e, chipLab.tiles())[0];
     let o = h?.object; while (o && o.userData.block === undefined) o = o.parent;
@@ -909,6 +1002,7 @@ function setLevel(l) {
   if (mode === 'find' && find.i < find.list.length) askFind();
   if (mode === 'museum') focusExhibit(exIndex, true);
   if (mode === 'chips') renderChipCard();
+  if (mode === 'teardown') renderTdCard();
 }
 function pickCardText() { const s = STEPS[build.step]; $('#task').textContent = level === 'kid' ? s.kidTask : s.title; $('#how').textContent = level === 'kid' ? s.kidHow : s.how; }
 $$('.level button').forEach(b => (b.onclick = () => { sfx.click(); setLevel(b.dataset.level); }));
@@ -952,13 +1046,15 @@ addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight); composer.setSize(innerWidth, innerHeight);
   labels.setSize(innerWidth, innerHeight);
+  applyViewOffset();
 });
 
 const clock = new THREE.Clock();
 function tick(dt = Math.min(clock.getDelta(), 0.05)) {
   const t = clock.elapsedTime;
   runTweens(dt);
-  if (mode === 'museum' || mode === 'chips') fanSound(0);
+  if (mode === 'museum' || mode === 'chips' || mode === 'teardown') fanSound(0);
+  if (mode === 'teardown') teardown.update(dt);
   if (mode === 'museum') museum.update(dt, t, exIndex);
   else if (mode === 'chips') chipLab.update(dt, t);
   else {
@@ -1002,7 +1098,7 @@ resetPC(false);
 try { thumbs = makeThumbs(); } catch (err) { console.warn('thumbnails skipped', err); }
 setLevel(level);
 const startMode = new URLSearchParams(location.search).get('mode') || store.get('mode') || 'explore';
-setMode(['explore', 'build', 'find', 'fix', 'chips', 'museum'].includes(startMode) ? startMode : 'explore');
+setMode(['explore', 'build', 'find', 'fix', 'chips', 'teardown', 'museum'].includes(startMode) ? startMode : 'explore');
 window.pcLab = { camera, controls, P, pc, museum, chipLab, journey, fixIt, profiles, setMode, fly, V, tick }; // handy for poking around in the console
 loop();
 $('#loading').classList.add('gone');

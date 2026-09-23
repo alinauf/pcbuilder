@@ -40,6 +40,7 @@
       <button data-mode="find"><i>🎯</i><span>Find It</span></button>
       <button data-mode="fix"><i>🩺</i><span>Fix It</span></button>
       <button data-mode="chips"><i>🔬</i><span>Chip Lab</span></button>
+      <button data-mode="teardown"><i>💻</i><span>Teardown</span></button>
       <button data-mode="museum"><i>🏛️</i><span>Museum</span></button>
     </nav>
     <div class="prefs">
@@ -139,6 +140,16 @@
       <div class="content"></div>
     </aside>
     <button id="lidBtn" class="lidBtn primary">🔓 Open it up!</button>
+  </div>
+
+  <!-- Teardown -->
+  <div id="tdUI" class="only-teardown">
+    <div id="tdTabs" class="chipTabs glass"></div>
+    <aside id="tdCard" class="card glass open">
+      <div class="head"><div class="emoji"></div><div><div class="year"></div><h2></h2></div></div>
+      <div class="content"></div>
+    </aside>
+    <button id="tdBtn" class="lidBtn primary">🔧 Take it apart</button>
   </div>
 
   <div id="calc" class="modal">

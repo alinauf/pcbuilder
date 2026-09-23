@@ -1,7 +1,7 @@
 // Offline support: app files are network-first (so updates show up), CDN libraries and fonts are cache-first.
-const CACHE = 'pclab-v1';
+const CACHE = 'pclab-v2';
 const CORE = ['./', 'index.html', 'style.css', 'manifest.webmanifest', 'icons/icon-192.png',
-  'js/main.js', 'js/kit.js', 'js/parts.js', 'js/museum.js', 'js/chips.js', 'js/features.js', 'js/compat.js', 'js/data.js'];
+  'js/main.js', 'js/kit.js', 'js/parts.js', 'js/museum.js', 'js/chips.js', 'js/features.js', 'js/compat.js', 'js/data.js', 'js/audio.js', 'js/teardown.js'];
 
 self.addEventListener('install', e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting())));
 self.addEventListener('activate', e => e.waitUntil(
