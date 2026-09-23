@@ -1015,3 +1015,7 @@ setMode(['explore', 'build', 'find', 'fix', 'chips', 'museum'].includes(startMod
 window.pcLab = { camera, controls, P, pc, museum, chipLab, journey, fixIt, profiles, setMode, fly, V, tick }; // handy for poking around in the console
 loop();
 $('#loading').classList.add('gone');
+// Offline / installable app (needs https or localhost; silently skipped elsewhere)
+if ('serviceWorker' in navigator && isSecureContext && location.protocol.startsWith('http') && window.top === window) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}

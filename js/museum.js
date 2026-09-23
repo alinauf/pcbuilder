@@ -478,6 +478,7 @@ function nes() {
   pad.add(box(1.2, 0.2, 0.4, std(0x44454a, 0.5), -0.6, 0.72, 1.0), box(1.2, 0.2, 0.4, std(0x44454a, 0.5), 1.0, 0.72, 1.0));
   g.add(cable([[-4, 0.6, 17.3], [-6, 0.6, 14], [7.3, 3.2, 10.4]], 0.2, std(0x151515, 0.6), 30));
   let k = 0;
+  cart.position.set(-3, 19.15, 22);
   return {
     group: g,
     play(on) { this.on = on; },
@@ -539,8 +540,17 @@ function gameboy() {
 // ---------- First iPhone ----------
 function iphone() {
   const g = new THREE.Group();
-  g.add(rbox(6.1, 11.5, 1.16, 0.5, std(0xb9bdc3, 0.3, 1), 0, 5.75, 0));
-  g.add(rbox(5.9, 11.3, 0.05, 0.45, std(0x050506, 0.1, 0.2), 0, 5.75, 0.58));
+  // Rounded-rectangle outline (the 2007 iPhone had big, soft corners)
+  const rr = (w, h, r, depth, bevel) => {
+    const s = new THREE.Shape(), x = -w / 2, y = -h / 2;
+    s.moveTo(x + r, y); s.lineTo(x + w - r, y); s.quadraticCurveTo(x + w, y, x + w, y + r); s.lineTo(x + w, y + h - r);
+    s.quadraticCurveTo(x + w, y + h, x + w - r, y + h); s.lineTo(x + r, y + h); s.quadraticCurveTo(x, y + h, x, y + h - r); s.lineTo(x, y + r); s.quadraticCurveTo(x, y, x + r, y);
+    const geo = new THREE.ExtrudeGeometry(s, { depth, bevelEnabled: bevel > 0, bevelSize: bevel, bevelThickness: bevel, bevelSegments: 4, curveSegments: 16 });
+    geo.translate(0, 0, -depth / 2);
+    return geo;
+  };
+  g.add(mesh(rr(5.9, 11.3, 1.0, 0.9, 0.12), std(0xb9bdc3, 0.3, 1), 0, 5.75, 0));
+  g.add(mesh(rr(5.8, 11.2, 0.95, 0.04, 0), std(0x050506, 0.1, 0.2), 0, 5.75, 0.58));
   const scr = canvasTex(320, 480, () => {});
   const mat = new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0xffffff, emissiveMap: scr, emissiveIntensity: 0 });
   g.add(mesh(new THREE.PlaneGeometry(4.95, 7.43), mat, 0, 6.0, 0.62));
