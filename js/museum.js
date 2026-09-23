@@ -293,9 +293,9 @@ function ibmpc() {
   const scr = canvasTex(640, 480, () => {});
   const sg = new THREE.PlaneGeometry(26, 19.5, 24, 18);
   const pos = sg.attributes.position;
-  for (let i = 0; i < pos.count; i++) { const x = pos.getX(i) / 13, y = pos.getY(i) / 9.75; pos.setZ(i, 0.9 * (1 - (x * x + y * y) / 2)); }
+  for (let i = 0; i < pos.count; i++) { const x = pos.getX(i) / 13, y = pos.getY(i) / 9.75; pos.setZ(i, 0.6 * (1 - (x * x + y * y) / 2)); }
   sg.computeVertexNormals();
-  const screen = mesh(sg, new THREE.MeshStandardMaterial({ color: 0x0a120c, roughness: 0.15, metalness: 0.1, emissive: 0xffffff, emissiveMap: scr, emissiveIntensity: 1.1 }), 0, 15, 15.6);
+  const screen = mesh(sg, new THREE.MeshStandardMaterial({ color: 0x0a120c, roughness: 0.15, metalness: 0.1, emissive: 0xffffff, emissiveMap: scr, emissiveIntensity: 1.1 }), 0, 15, 16.25);
   mon.add(screen);
   const bz = [boxGeo(38, 3.6, 1.2, 0, 27.2 - 1.8, 16.2), boxGeo(38, 4.4, 1.2, 0, 2.2, 16.2), boxGeo(6, 22, 1.2, -16, 15, 16.2), boxGeo(6, 22, 1.2, 16, 15, 16.2)];
   mon.add(merged(bz, beige));
@@ -346,13 +346,23 @@ function ibmpc() {
 // ---------- CD-ROM ----------
 function cdrom() {
   const g = new THREE.Group();
-  const disc = new THREE.Group(); disc.rotation.x = -Math.PI / 2; // rainbow data side faces you disc.position.y = 6.3;
+  const disc = new THREE.Group(); disc.rotation.x = -Math.PI / 2; disc.position.y = 6.3; // rainbow data side faces you
   const spinner = new THREE.Group(); disc.add(spinner); g.add(disc);
   const ring = (r0, r1, t, mat) => mesh(new THREE.LatheGeometry([new THREE.Vector2(r0, -t / 2), new THREE.Vector2(r1, -t / 2), new THREE.Vector2(r1, t / 2), new THREE.Vector2(r0, t / 2), new THREE.Vector2(r0, -t / 2)], 128), mat);
   const clear = new THREE.MeshPhysicalMaterial({ color: 0xffffff, transmission: 1, roughness: 0.05, thickness: 0.12, transparent: true, opacity: 0.5 });
   spinner.add(ring(0.75, 2.25, 0.12, clear));
   spinner.add(ring(1.6, 1.75, 0.16, clear));
-  spinner.add(ring(2.25, 5.9, 0.12, new THREE.MeshPhysicalMaterial({ color: 0xe6e6e6, metalness: 1, roughness: 0.1, iridescence: 1, iridescenceIOR: 1.7, iridescenceThicknessRange: [180, 900] })));
+  // Data side: mirror-like with a diffraction rainbow (the tracks split light like a prism)
+  const rainbow = canvasTex(512, 512, (c, w) => {
+    const g = c.createConicGradient(0, w / 2, w / 2);
+    ['#ffd1dc', '#fff3c4', '#d4ffd9', '#cdeeff', '#e5d4ff', '#ffd1dc', '#fff3c4', '#d4ffd9', '#cdeeff', '#e5d4ff', '#ffd1dc'].forEach((col, i, a) => g.addColorStop(i / (a.length - 1), col));
+    c.fillStyle = g; c.fillRect(0, 0, w, w);
+  });
+  const data = ring(2.25, 5.9, 0.12, new THREE.MeshPhysicalMaterial({ color: 0xffffff, map: rainbow, metalness: 1, roughness: 0.08, envMapIntensity: 3, iridescence: 1, iridescenceIOR: 1.8, iridescenceThicknessRange: [200, 900] }));
+  // Lathe UVs run around the ring; remap to planar so the conic rainbow sits centred.
+  const pos = data.geometry.attributes.position, uv = data.geometry.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, pos.getX(i) / 12 + 0.5, pos.getZ(i) / 12 + 0.5);
+  spinner.add(data);
   spinner.add(ring(5.9, 6.0, 0.12, clear));
   const label = mesh(new THREE.RingGeometry(2.3, 5.88, 128), new THREE.MeshStandardMaterial({ roughness: 0.6, map: canvasTex(512, 512, (c, w) => {
     const grd = c.createRadialGradient(256, 256, 60, 256, 256, 256); grd.addColorStop(0, '#fff7d6'); grd.addColorStop(1, '#ffd166');

@@ -688,7 +688,7 @@ export function buildPC() {
     psu: { obj: psu, parent: root, pos: new THREE.Vector3(-15, 5.45, -0.5), quat: Q.clone(), approach: [0, 0, 24], explode: [0, -1, 30] },
     gpu: { obj: gpu, parent: root, pos: GPU_POS.clone(), quat: Q.clone(), approach: [0, 0, 14], explode: [0, -2, 20] },
     cables: { obj: cables, parent: root, pos: new THREE.Vector3(), quat: Q.clone() },
-    panel: { obj: panel, parent: root, pos: panel.position.clone(), quat: Q.clone(), approach: [0, 0, 16], explode: [0, 0, 32] },
+    panel: { obj: panel, parent: root, pos: panel.position.clone(), quat: Q.clone(), approach: [0, 0, 16], explode: [62, 0, 12] },
   };
   for (const [id, p] of Object.entries(P)) {
     p.id = id;

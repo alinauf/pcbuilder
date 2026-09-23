@@ -707,7 +707,7 @@ function renderCalc(i) {
   const max = Math.max(...bars.map(b => b.m));
   $('#calc .result').innerHTML = `
     <div class="big">${n.toLocaleString()} <span>floppy disk${n === 1 ? '' : 's'}</span></div>
-    <p>${item.emoji} ${esc(item.name)} would fill <b>${n.toLocaleString()}</b> floppy disks. Stacked up they’d be <b>${fmt(m)}</b> tall and weigh <b>${(n * 0.02).toLocaleString(undefined, { maximumFractionDigits: 1 })} kg</b>.</p>
+    <p>${item.emoji} ${esc(item.name)} would fill <b>${n.toLocaleString()}</b> floppy disks. Stacked up they’d be <b>${fmt(m)}</b> tall and weigh <b>${n * 0.02 >= 1000 ? (n * 0.00002).toLocaleString(undefined, { maximumFractionDigits: 1 }) + ' tonnes' : (n * 0.02).toLocaleString(undefined, { maximumFractionDigits: 1 }) + ' kg'}</b>.</p>
     <p class="cmp">${compare}</p>
     <div class="bars">${bars.map(b => `<div class="bar ${b.stack ? 'stack' : ''}"><div class="col" style="height:${Math.max(2, b.m / max * 100)}%"></div><span>${b.emoji}</span><small>${esc(b.name)}<br>${fmt(b.m)}</small></div>`).join('')}</div>`;
 }
