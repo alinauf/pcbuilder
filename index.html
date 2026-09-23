@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>PC Builder Lab</title>
+  <meta name="description" content="Learn the parts of a computer, build one step by step in 3D, and visit the museum of computing history.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛠️</text></svg>">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body data-mode="explore" data-level="kid">
+  <canvas id="scene" aria-label="3D computer workshop"></canvas>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">🛠️</span>
+      <div><b>PC Builder Lab</b><small>Learn it · Build it · Boot it</small></div>
+    </div>
+    <nav class="modes" aria-label="Mode">
+      <button data-mode="explore"><i>🔍</i><span>Explore</span></button>
+      <button data-mode="build"><i>🔧</i><span>Build</span></button>
+      <button data-mode="find"><i>🎯</i><span>Find It</span></button>
+      <button data-mode="museum"><i>🏛️</i><span>Museum</span></button>
+    </nav>
+    <div class="prefs">
+      <div class="level" role="group" aria-label="Reading level">
+        <button data-level="kid">🧒 Kid</button>
+        <button data-level="adult">🧑‍🔧 Grown-up</button>
+      </div>
+      <button id="mute" class="icon" aria-label="Sound on">🔊</button>
+    </div>
+  </header>
+
+  <!-- Explore -->
+  <div id="exploreUI" class="only-explore">
+    <div class="toolbar glass">
+      <button id="tExplode">💥 <span>Explode</span></button>
+      <button id="tGlass" class="on">🪟 <span>Glass</span></button>
+      <button id="tPower" class="on">⚡ <span>Power</span></button>
+      <button id="tLabels" class="on">🏷️ <span>Labels</span></button>
+      <button id="tReset">🎥 <span>Reset view</span></button>
+    </div>
+    <p class="hint">👆 Tap any part to learn what it does · drag to spin · pinch or scroll to zoom</p>
+  </div>
+
+  <aside id="info" class="card glass" aria-live="polite">
+    <button class="close icon" aria-label="Close">✕</button>
+    <div class="head"><div class="emoji"></div><div><h2></h2><p class="role"></p></div></div>
+    <p class="body"></p>
+    <ul class="facts"></ul>
+    <dl class="specs"></dl>
+    <button class="speak">🔊 Read it to me</button>
+  </aside>
+
+  <!-- Build -->
+  <div id="buildUI" class="only-build">
+    <div id="progress" class="progress glass"></div>
+    <div class="bubble glass">
+      <div id="stepno" class="stepno"></div>
+      <div id="task" class="task"></div>
+      <div id="how" class="how"></div>
+      <button id="placeBtn" class="primary" hidden>✨ Place it!</button>
+    </div>
+    <div class="trayWrap glass">
+      <div class="trayHead"><b>📦 Parts box</b>
+        <span><button id="autoBtn">▶ Show me</button><button id="restartBtn">↺ Restart</button></span>
+      </div>
+      <div id="tray" class="tray"></div>
+    </div>
+  </div>
+
+  <!-- Find it -->
+  <div id="findUI" class="only-find">
+    <div class="bubble glass find">
+      <div id="findQ" class="task"></div>
+      <div id="findFb" class="how"></div>
+      <div id="findScore" class="stars"></div>
+    </div>
+  </div>
+
+  <!-- Museum -->
+  <div id="museumUI" class="only-museum">
+    <aside id="exhibit" class="card glass open">
+      <div class="head"><div class="emoji"></div><div><div class="year"></div><h2></h2></div></div>
+      <div class="stats"></div>
+      <p class="body"></p>
+      <p class="fact"></p>
+      <p class="scale"></p>
+      <div class="row"><button class="play primary"></button><button class="speak">🔊 Read</button></div>
+    </aside>
+    <button id="mPrev" class="nav glass" aria-label="Previous exhibit">‹</button>
+    <button id="mNext" class="nav glass" aria-label="Next exhibit">›</button>
+    <div id="timeline" class="timeline glass"></div>
+    <button id="calcBtn" class="calcBtn glass">💾 How many floppies?</button>
+  </div>
+
+  <div id="calc" class="modal">
+    <div class="sheet glass">
+      <button class="x icon" aria-label="Close">✕</button>
+      <h2>💾 How many floppy disks would it take?</h2>
+      <p class="sub">One 3½" floppy holds 1.44 MB and is 3.3 mm thick. Pick something to store:</p>
+      <div class="items"></div>
+      <div class="result"></div>
+    </div>
+  </div>
+
+  <div id="boot" class="modal">
+    <div class="sheet boot">
+      <div class="monitor"><pre class="crt"></pre></div>
+      <div class="done" hidden>
+        <h2>🎉 You built a computer!</h2>
+        <p class="stats"></p>
+        <div class="row"><button class="explore primary">🔍 Explore your PC</button><button class="again">🔧 Build again</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" role="status"></div>
+  <div id="tooltip"></div>
+  <div id="loading"><div class="spin">🛠️</div><p>Unboxing parts…</p></div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
