@@ -37,7 +37,8 @@ const envTex = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(
 // Glass gets its own dim reflections so it reads as clear, not milky
 M.glass.envMap = envTex; M.glass.envMapIntensity = 0.3; M.glass.opacity = 0.16; M.glass.color.set(0x0e1218); M.glass.side = THREE.FrontSide;
 
-const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 1, 3000);
+// The window can be 0×0 if the app starts in a hidden tab or pane; fall back to a sane aspect.
+const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight || 1.5, 1, 3000);
 camera.position.set(80, 60, 120);
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
@@ -1043,6 +1044,7 @@ function makeThumbs() {
 
 // ---------- Resize + loop ----------
 addEventListener('resize', () => {
+  if (!innerWidth || !innerHeight) return;
   camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight); composer.setSize(innerWidth, innerHeight);
   labels.setSize(innerWidth, innerHeight);
